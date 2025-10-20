@@ -1564,13 +1564,13 @@ Getting-Started-Steps:
 
 Free-Resources:
 - Free consultation call (30 minutes)
-- Free project estimate
+- Free project estimate !
 - Free technology assessment
 - Free competitor analysis
 - Free technical documentation review
 - Free security assessment (high-level)
 
-Fast-Track-Projects:
+Fast-Track-Projects: 
 - Urgent projects accepted
 - Can start within 48 hours
 - Dedicated team for fast delivery
