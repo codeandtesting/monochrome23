@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getSiteByUrl } from '../utils/sitesStorage';
 import ChatPage from './ChatPage';
-image.pngimport ClientSitePage from './ClientSitePage';
+import ClientSitePage from './ClientSitePage';
 
 export default function SitePage() {
   const location = useLocation();
