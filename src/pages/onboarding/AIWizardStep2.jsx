@@ -1,151 +1,194 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { Sparkles, Check } from 'lucide-react';
+import { chatWithDeepSeek } from '../../api/deepseek';
 
 export default function AIWizardStep2() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    phone: '',
-    email: '',
-    address: '',
-    instagram: false,
-    facebook: false,
-    whatsapp: false,
-  });
+  const [progress, setProgress] = useState(0);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [generatedContent, setGeneratedContent] = useState(null);
 
-  const handleNext = () => {
-    localStorage.setItem('onboarding_step2', JSON.stringify(formData));
-    navigate('/onboarding/ai-wizard/step3');
-  };
-
-  const socialButtons = [
-    {
-      id: 'instagram',
-      name: 'Instagram',
-      color: 'from-purple-500 to-pink-500',
-      letter: 'in',
-    },
-    {
-      id: 'facebook',
-      name: 'Facebook',
-      color: 'bg-blue-500',
-      letter: 'f',
-    },
-    {
-      id: 'whatsapp',
-      name: 'WhatsApp Business',
-      color: 'bg-green-500',
-      letter: 'W',
-    },
+  const steps = [
+    { label: 'Analyzing your business...', duration: 2000 },
+    { label: 'Creating company description...', duration: 3000 },
+    { label: 'Generating services list...', duration: 3000 },
+    { label: 'Crafting unique selling points...', duration: 2000 },
+    { label: 'Finalizing your website...', duration: 2000 },
   ];
+
+  useEffect(() => {
+    const wizardData = localStorage.getItem('aiWizardData');
+    if (!wizardData) {
+      navigate('/onboarding/ai-wizard/step1');
+      return;
+    }
+
+    generateContent(JSON.parse(wizardData));
+  }, []);
+
+  const generateContent = async (formData) => {
+    // Симуляция прогресса
+    let totalTime = 0;
+    for (let i = 0; i < steps.length; i++) {
+      setTimeout(() => {
+        setCurrentStep(i);
+        setProgress(((i + 1) / steps.length) * 100);
+      }, totalTime);
+      totalTime += steps[i].duration;
+    }
+
+    // Генерация контента через AI
+    try {
+      const prompt = `You are a professional website content generator. Based on the following business information, create a complete website content in JSON format.
+
+Business Information:
+- Company Name: ${formData.companyName}
+- Services: ${formData.businessDescription}
+- Location: ${formData.location === 'local' ? formData.specificLocation : formData.location === 'regional' ? 'Regional coverage' : 'Global services'}
+
+Generate a JSON object with the following structure:
+{
+  "hero": {
+    "companyName": "company name",
+    "tagline": "catchy tagline (max 10 words)",
+    "description": "professional description (2-3 sentences)"
+  },
+  "services": [
+    {"title": "service 1", "description": "brief description", "category": "category name"},
+    {"title": "service 2", "description": "brief description", "category": "category name"},
+    ... (create 5-8 services based on the business description)
+  ],
+  "stats": [
+    {"icon": "⚡", "value": "relevant number", "label": "achievement"},
+    {"icon": "🛡️", "value": "relevant number", "label": "achievement"},
+    {"icon": "⭐", "value": "relevant number", "label": "achievement"}
+  ]
+}
+
+Make the content professional, engaging, and tailored to the business. Use appropriate emojis for stats. Return ONLY the JSON object, no additional text.`;
+
+      const response = await chatWithDeepSeek([
+        { role: 'user', content: prompt }
+      ]);
+
+      // Парсим JSON из ответа
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const content = JSON.parse(jsonMatch[0]);
+        
+        setTimeout(() => {
+          localStorage.setItem('generatedContent', JSON.stringify(content));
+          setGeneratedContent(content);
+          
+          // Переход на step 3 через 1 секунду
+          setTimeout(() => {
+            navigate('/onboarding/ai-wizard/step3');
+          }, 1000);
+        }, totalTime);
+      }
+    } catch (error) {
+      console.error('Error generating content:', error);
+      // В случае ошибки используем базовый контент
+      setTimeout(() => {
+        const fallbackContent = {
+          hero: {
+            companyName: formData.companyName,
+            tagline: 'Professional Services You Can Trust',
+            description: `${formData.companyName} specializes in ${formData.businessDescription}. We deliver quality results with attention to detail.`
+          },
+          services: [
+            { title: 'Primary Service', description: 'High-quality primary service', category: 'Main' },
+            { title: 'Secondary Service', description: 'Reliable secondary service', category: 'Main' }
+          ],
+          stats: [
+            { icon: '⚡', value: '10+', label: 'Years Experience' },
+            { icon: '🛡️', value: '100+', label: 'Projects Done' },
+            { icon: '⭐', value: '50+', label: 'Happy Clients' }
+          ]
+        };
+        
+        localStorage.setItem('generatedContent', JSON.stringify(fallbackContent));
+        navigate('/onboarding/ai-wizard/step3');
+      }, totalTime);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
-      <div className="w-full max-w-3xl space-y-8">
+      <div className="w-full max-w-2xl">
         {/* Header */}
-        <div className="text-center">
-          <div className="w-16 h-16 bg-blue-500 rounded-full mx-auto mb-4 flex items-center justify-center text-white text-3xl">
-            ✨
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full mb-4 animate-pulse">
+            <Sparkles size={32} className="text-white" />
           </div>
-          <h2 className="text-3xl font-bold mb-2">AI Wizard</h2>
-          <p className="text-gray-400">Шаг 2 из 3 • Добавьте контакты</p>
-        </div>
-
-        {/* Info Banner */}
-        <div className="bg-blue-500 bg-opacity-10 border border-blue-500 border-opacity-30 rounded-lg p-4">
-          <p className="text-sm text-gray-300">
-            📞 Укажите способы связи, чтобы клиенты могли с вами связаться
+          <h1 className="text-4xl font-bold mb-2">Creating Your Website...</h1>
+          <p className="text-gray-400">
+            AI is generating professional content for your business
           </p>
         </div>
 
-        {/* Contact Form */}
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Телефон *</label>
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full bg-gray-900 border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="+7 999 123-45-67"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">Email *</label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full bg-gray-900 border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="info@company.com"
-              />
-            </div>
+        {/* Progress Bar */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm text-gray-400">Progress</span>
+            <span className="text-sm font-medium">{Math.round(progress)}%</span>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">Адрес (необязательно)</label>
-            <input
-              type="text"
-              value={formData.address}
-              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              className="w-full bg-gray-900 border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Москва, ул. Примерная, 123"
+          <div className="w-full h-3 bg-gray-900 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500 ease-out"
+              style={{ width: `${progress}%` }}
             />
-          </div>
-
-          {/* Social Networks */}
-          <div className="border-t border-gray-800 pt-6">
-            <h3 className="text-lg font-semibold mb-2">Социальные сети (необязательно)</h3>
-            <p className="text-sm text-gray-400 mb-4">Подключите аккаунты в один клик</p>
-
-            <div className="space-y-3">
-              {socialButtons.map((social) => (
-                <button
-                  key={social.id}
-                  onClick={() => setFormData({ ...formData, [social.id]: !formData[social.id] })}
-                  className="w-full flex items-center justify-between p-4 bg-gray-900 border-2 border-gray-800 rounded-lg hover:border-gray-700 transition-all"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-12 h-12 bg-gradient-to-br ${social.color} rounded-lg flex items-center justify-center text-white font-bold`}>
-                      {social.letter}
-                    </div>
-                    <div className="text-left">
-                      <p className="font-medium">{social.name}</p>
-                      <p className="text-xs text-gray-500">
-                        {formData[social.id] ? 'Подключен' : 'Не подключен'}
-                      </p>
-                    </div>
-                  </div>
-                  <span className="text-sm text-blue-400 font-medium">
-                    {formData[social.id] ? 'Отключить' : 'Подключить →'}
-                  </span>
-                </button>
-              ))}
-            </div>
           </div>
         </div>
 
-        {/* Navigation */}
-        <div className="flex justify-between pt-4">
-          <button
-            onClick={() => navigate('/onboarding/ai-wizard/step1')}
-            className="px-6 py-3 border border-gray-700 rounded-lg hover:bg-gray-900 transition-colors flex items-center gap-2"
-          >
-            <ArrowLeft size={18} />
-            Назад
-          </button>
-          <button
-            onClick={handleNext}
-            disabled={!formData.phone || !formData.email}
-            className="px-8 py-3 bg-white text-black rounded-lg hover:bg-gray-200 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Далее →
-          </button>
+        {/* Steps */}
+        <div className="space-y-4">
+          {steps.map((step, index) => (
+            <div
+              key={index}
+              className={`flex items-center gap-4 p-4 rounded-lg border transition-all ${
+                index < currentStep
+                  ? 'border-green-500 bg-green-500 bg-opacity-10'
+                  : index === currentStep
+                  ? 'border-blue-500 bg-blue-500 bg-opacity-10 animate-pulse'
+                  : 'border-gray-800 bg-gray-900 opacity-50'
+              }`}
+            >
+              <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                index < currentStep
+                  ? 'bg-green-500'
+                  : index === currentStep
+                  ? 'bg-blue-500'
+                  : 'bg-gray-800'
+              }`}>
+                {index < currentStep ? (
+                  <Check size={18} className="text-white" />
+                ) : (
+                  <span className="text-sm font-medium">{index + 1}</span>
+                )}
+              </div>
+              <p className={`font-medium ${
+                index <= currentStep ? 'text-white' : 'text-gray-500'
+              }`}>
+                {step.label}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* Loading Animation */}
+        <div className="mt-12 text-center">
+          <div className="flex justify-center gap-2">
+            <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+            <div className="w-3 h-3 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            <div className="w-3 h-3 bg-pink-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+          </div>
+          <p className="text-sm text-gray-500 mt-4">
+            This may take a few seconds...
+          </p>
         </div>
       </div>
     </div>
   );
 }
-

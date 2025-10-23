@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -6,18 +6,43 @@ import {
   Settings, 
   CreditCard, 
   Image, 
-  Plug, 
+  Plug,
   Pencil,
   LogOut,
   Menu,
-  X
+  X,
+  Globe
 } from 'lucide-react';
+import { getActiveSite } from '../../utils/sitesStorage';
 
 export default function Sidebar({ isOpen, setIsOpen }) {
   const location = useLocation();
+  const [activeSite, setActiveSite] = useState(null);
+
+  useEffect(() => {
+    loadActiveSite();
+    
+    const handleSiteChange = () => {
+      loadActiveSite();
+    };
+    
+    window.addEventListener('activeSiteChanged', handleSiteChange);
+    window.addEventListener('sitesUpdated', handleSiteChange);
+    
+    return () => {
+      window.removeEventListener('activeSiteChanged', handleSiteChange);
+      window.removeEventListener('sitesUpdated', handleSiteChange);
+    };
+  }, []);
+
+  const loadActiveSite = () => {
+    const site = getActiveSite();
+    setActiveSite(site);
+  };
 
   const menuItems = [
     { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { path: '/dashboard/my-sites', icon: Globe, label: 'My Sites' },
     { path: '/dashboard/requests', icon: MessageSquare, label: 'Requests' },
     { path: '/dashboard/portfolio', icon: Image, label: 'Portfolio' },
     { path: '/dashboard/integrations', icon: Plug, label: 'Integrations' },
@@ -65,9 +90,11 @@ export default function Sidebar({ isOpen, setIsOpen }) {
           <div className="p-6 border-b border-gray-800">
             <Link to="/" className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                <span className="text-black font-bold text-lg">P</span>
+                <span className="text-black font-bold text-lg">
+                  {activeSite?.name?.charAt(0).toUpperCase() || 'M'}
+                </span>
               </div>
-              <span className="text-xl font-bold">ProgressIT</span>
+              <span className="text-xl font-bold">{activeSite?.name || 'Monochrome'}</span>
             </Link>
           </div>
 
@@ -97,7 +124,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
           {/* Bottom Section */}
           <div className="p-4 border-t border-gray-800">
             <Link
-              to="/"
+              to={activeSite?.url || '/'}
               className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition-all"
             >
               <LogOut size={20} />

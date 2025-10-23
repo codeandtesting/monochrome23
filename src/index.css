@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Default color scheme - будет перезаписано через JS */
+  --color-primary: #3b82f6;
+  --color-secondary: #8b5cf6;
+  --color-background: #000000;
+  --color-surface: #1a1a1a;
+  --color-text: #ffffff;
+  --color-accent: #06b6d4;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -9,6 +19,42 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #000000;
+  color: #ffffff;
+}
+
+/* Применяем theme цвета только для landing страниц */
+.landing-theme {
+  background-color: var(--color-background) !important;
+  color: var(--color-text) !important;
+}
+
+/* Автоматически применяем theme цвета к частым элементам - ТОЛЬКО для landing pages */
+.landing-theme .bg-gray-900 {
+  background: linear-gradient(135deg, 
+    color-mix(in srgb, var(--color-primary) 5%, var(--color-background)),
+    color-mix(in srgb, var(--color-secondary) 5%, var(--color-background))
+  ) !important;
+}
+
+.landing-theme .bg-gray-800 {
+  background-color: color-mix(in srgb, var(--color-primary) 8%, var(--color-background)) !important;
+}
+
+.landing-theme .border-gray-800 {
+  border-color: color-mix(in srgb, var(--color-primary) 20%, transparent) !important;
+}
+
+.landing-theme .border-gray-700 {
+  border-color: color-mix(in srgb, var(--color-primary) 30%, transparent) !important;
+}
+
+.landing-theme .bg-gray-700 {
+  background-color: color-mix(in srgb, var(--color-secondary) 15%, var(--color-background)) !important;
+}
+
+.landing-theme .border-gray-600 {
+  border-color: color-mix(in srgb, var(--color-accent) 40%, transparent) !important;
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
@@ -57,3 +103,170 @@ body {
   animation: fadeIn 0.3s ease-out;
 }
 
+/* Утилиты для динамических цветов */
+.bg-theme-primary {
+  background-color: var(--color-primary) !important;
+}
+
+.bg-theme-secondary {
+  background-color: var(--color-secondary) !important;
+}
+
+.bg-theme-accent {
+  background-color: var(--color-accent) !important;
+}
+
+.bg-theme-surface {
+  background-color: var(--color-surface) !important;
+}
+
+.text-theme-primary {
+  color: var(--color-primary) !important;
+}
+
+.text-theme-secondary {
+  color: var(--color-secondary) !important;
+}
+
+.text-theme-accent {
+  color: var(--color-accent) !important;
+}
+
+.border-theme-primary {
+  border-color: var(--color-primary) !important;
+}
+
+.border-theme-secondary {
+  border-color: var(--color-secondary) !important;
+}
+
+.border-theme-accent {
+  border-color: var(--color-accent) !important;
+}
+
+.border-theme-surface {
+  border-color: var(--color-surface) !important;
+}
+
+.ring-theme-primary {
+  --tw-ring-color: var(--color-primary) !important;
+}
+
+.hover\:bg-theme-primary:hover {
+  background-color: var(--color-primary) !important;
+}
+
+.hover\:text-theme-primary:hover {
+  color: var(--color-primary) !important;
+}
+
+/* Автоматически применяем theme цвета к определенным элементам - ТОЛЬКО для landing */
+.landing-theme .message-bubble-assistant {
+  background-color: var(--color-surface) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.landing-theme .message-bubble-user {
+  background-color: var(--color-primary) !important;
+}
+
+.landing-theme .indicator-active {
+  background-color: var(--color-primary) !important;
+}
+
+.landing-theme .indicator-inactive {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.landing-theme .indicator-inactive:hover {
+  background-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Extra animation for mobile transitions */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeInUp { animation: fadeInUp 280ms ease-out; }
+
+/* Градиентный текст с theme цветами - ТОЛЬКО для landing */
+.landing-theme .text-gradient-theme {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Анимация для акцентов */
+.accent-glow {
+  box-shadow: 0 0 20px var(--color-primary);
+  transition: box-shadow 0.3s ease;
+}
+
+.accent-glow:hover {
+  box-shadow: 0 0 30px var(--color-primary);
+}
+
+/* Эффект свечения для input при фокусе - ТОЛЬКО для landing */
+.landing-theme input:focus {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 50%, transparent) !important;
+}
+
+/* Акцентные цвета для placeholder - ТОЛЬКО для landing */
+.landing-theme ::placeholder {
+  color: color-mix(in srgb, var(--color-text) 40%, transparent) !important;
+}
+
+/* Hover эффекты с theme цветами - ТОЛЬКО для landing */
+.landing-theme .hover\:bg-gray-800:hover {
+  background-color: color-mix(in srgb, var(--color-primary) 15%, var(--color-background)) !important;
+}
+
+.landing-theme .hover\:bg-gray-700:hover {
+  background-color: color-mix(in srgb, var(--color-secondary) 20%, var(--color-background)) !important;
+}
+
+.landing-theme .hover\:bg-gray-600:hover {
+  background-color: color-mix(in srgb, var(--color-accent) 25%, var(--color-background)) !important;
+}
+
+/* Текстовые цвета для акцентов - ТОЛЬКО для landing */
+.landing-theme .text-gray-400 {
+  color: color-mix(in srgb, var(--color-text) 60%, transparent) !important;
+}
+
+.landing-theme .text-gray-300 {
+  color: color-mix(in srgb, var(--color-text) 80%, transparent) !important;
+}
+
+.landing-theme .text-gray-500 {
+  color: color-mix(in srgb, var(--color-text) 50%, transparent) !important;
+}
+
+/* Звездочки и эмодзи с theme цветами - ТОЛЬКО для landing */
+.landing-theme .text-yellow-400 {
+  color: var(--color-accent) !important;
+}
+
+/* Акцентируем иконки */
+svg {
+  color: inherit !important;
+}
+
+/* Добавляем легкий оттенок к черному фону - ТОЛЬКО для landing */
+.landing-theme.bg-black,
+.landing-theme .bg-black {
+  background: linear-gradient(180deg, 
+    var(--color-background), 
+    color-mix(in srgb, var(--color-primary) 3%, var(--color-background))
+  ) !important;
+}
+
+.landing-theme.min-h-screen {
+  min-height: 100vh !important;
+}
+
+/* Гарантируем правильный border для split layout */
+.landing-theme .border-l.border-gray-800 {
+  border-left: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent) !important;
+}

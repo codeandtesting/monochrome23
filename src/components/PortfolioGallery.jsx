@@ -1,37 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
-
-const portfolioProjects = [
-  {
-    id: 1,
-    image: '/portfolio/1a.jpg',
-    title: 'Project 1'
-  },
-  {
-    id: 2,
-    image: '/portfolio/2a.jpg',
-    title: 'Project 2'
-  },
-  {
-    id: 3,
-    image: '/portfolio/3a.jpg',
-    title: 'Project 3'
-  },
-  {
-    id: 4,
-    image: '/portfolio/4a.jpg',
-    title: 'Project 4'
-  },
-  {
-    id: 5,
-    image: '/portfolio/5a.jpg',
-    title: 'Project 5'
-  }
-];
+import { getAllPortfolioItems } from '../utils/portfolioStorage';
 
 export default function PortfolioGallery() {
+  const [portfolioProjects, setPortfolioProjects] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Загрузить портфолио из localStorage
+  useEffect(() => {
+    const items = getAllPortfolioItems();
+    // Берем максимум 6 изображений для галереи
+    setPortfolioProjects(items.slice(0, 6));
+  }, []);
 
   const openLightbox = (index) => {
     setCurrentIndex(index);
@@ -43,16 +24,35 @@ export default function PortfolioGallery() {
   };
 
   const goToPrevious = () => {
+    if (portfolioProjects.length === 0) return;
     const newIndex = (currentIndex - 1 + portfolioProjects.length) % portfolioProjects.length;
     setCurrentIndex(newIndex);
     setSelectedImage(portfolioProjects[newIndex]);
   };
 
   const goToNext = () => {
+    if (portfolioProjects.length === 0) return;
     const newIndex = (currentIndex + 1) % portfolioProjects.length;
     setCurrentIndex(newIndex);
     setSelectedImage(portfolioProjects[newIndex]);
   };
+
+  // Если портфолио пусто
+  if (portfolioProjects.length === 0) {
+    return (
+      <div className="my-4 bg-gray-900 rounded-xl p-5 border border-gray-700">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center border border-gray-600">
+            <span className="text-xl">🎨</span>
+          </div>
+          <div>
+            <h3 className="text-white font-semibold text-lg">Our Portfolio</h3>
+            <p className="text-gray-400 text-xs">Loading portfolio...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -74,13 +74,19 @@ export default function PortfolioGallery() {
               onClick={() => openLightbox(index)}
             >
               <img
-                src={project.image}
+                src={project.url}
                 alt={project.title}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                onError={(e) => {
+                  e.target.src = 'https://via.placeholder.com/400x400?text=Portfolio+Image';
+                }}
               />
-              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
-                <span className="text-white opacity-0 group-hover:opacity-100 text-sm font-medium transition-opacity duration-300">
-                  View
+              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-300 flex flex-col items-center justify-center">
+                <span className="text-white opacity-0 group-hover:opacity-100 text-xs font-medium transition-opacity duration-300 px-2 text-center">
+                  {project.title}
+                </span>
+                <span className="text-gray-300 opacity-0 group-hover:opacity-100 text-xs transition-opacity duration-300 mt-1">
+                  {project.category}
                 </span>
               </div>
             </div>
@@ -123,12 +129,17 @@ export default function PortfolioGallery() {
 
           <div className="max-w-4xl max-h-[90vh] px-4" onClick={(e) => e.stopPropagation()}>
             <img
-              src={selectedImage.image}
+              src={selectedImage.url}
               alt={selectedImage.title}
               className="max-w-full max-h-[90vh] object-contain rounded-lg"
+              onError={(e) => {
+                e.target.src = 'https://via.placeholder.com/800x600?text=Portfolio+Image';
+              }}
             />
             <div className="text-center mt-4 text-white">
-              <p className="text-sm">
+              <h3 className="text-lg font-semibold mb-1">{selectedImage.title}</h3>
+              <p className="text-sm text-gray-400 mb-2">{selectedImage.category}</p>
+              <p className="text-xs text-gray-500">
                 {currentIndex + 1} / {portfolioProjects.length}
               </p>
             </div>
