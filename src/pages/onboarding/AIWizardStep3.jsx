@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, ArrowRight, Phone, Mail, Globe, Facebook, Instagram, Twitter, MessageCircle, Youtube } from 'lucide-react';
 import { createSite } from '../../utils/sitesStorage';
+import ChatPage from '../ChatPage';
+import ClientSitePage from '../ClientSitePage';
 
 export default function AIWizardStep3() {
   const navigate = useNavigate();
   const [generatedContent, setGeneratedContent] = useState(null);
+  const [selectedLayout, setSelectedLayout] = useState('main'); // 'main' (Layout 1) | 'client' (Layout 2)
   const [contacts, setContacts] = useState({
     phone: '',
     email: '',
@@ -73,7 +76,7 @@ export default function AIWizardStep3() {
       portfolio: [],
       design: {
         colorScheme: 'default',
-        activeLanding: 'client'
+        activeLanding: selectedLayout
       }
     });
 
@@ -81,9 +84,70 @@ export default function AIWizardStep3() {
     localStorage.removeItem('aiWizardData');
     localStorage.removeItem('generatedContent');
 
-    // Переходим на дашборд
-    navigate('/dashboard');
+    // Переходим на фейковую регистрацию (прокладка), затем в дашборд
+    navigate('/onboarding/signup');
   };
+
+  // Собираем временный сайт для живого превью на основе сгенерированных данных
+  const previewSite = useMemo(() => {
+    if (!generatedContent) return null;
+    const mappedServices = (generatedContent.services || []).map((service, index) => ({
+      id: `preview_${index}`,
+      title: service.title,
+      description: service.description,
+      category: service.category || 'General',
+      active: true
+    }));
+
+    return {
+      id: 'preview-site',
+      name: generatedContent.hero?.companyName || 'Preview Site',
+      data: {
+        hero: generatedContent.hero,
+        services: {
+          enabled: true,
+          heading: 'Our Services',
+          list: mappedServices
+        },
+        contacts: {
+          heading: 'Get in Touch',
+          phone: contacts.phone,
+          email: contacts.email,
+          address: '',
+          website: contacts.website
+        },
+        social: {
+          facebook: social.facebook,
+          instagram: social.instagram,
+          twitter: social.twitter,
+          discord: social.discord,
+          youtube: social.youtube
+        },
+        stats: {
+          enabled: (stats || []).length > 0,
+          items: stats
+        },
+        testimonials: {
+          enabled: false,
+          items: []
+        },
+        showcase: {
+          showAbout: true,
+          showPortfolio: true,
+          showServices: true,
+          showStats: true,
+          showTestimonials: false,
+          showContacts: true
+        }
+      },
+      services: mappedServices,
+      portfolio: [],
+      design: {
+        colorScheme: 'default',
+        activeLanding: selectedLayout
+      }
+    };
+  }, [generatedContent, contacts, social, stats, selectedLayout]);
 
   if (!generatedContent) {
     return <div className="min-h-screen bg-black flex items-center justify-center">
@@ -106,9 +170,36 @@ export default function AIWizardStep3() {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
-          {/* Left: Preview */}
+          {/* Left: Preview (Layout 1 Website Preview) */}
           <div>
-            <h2 className="text-2xl font-semibold mb-4">Generated Content Preview</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-semibold">Generated Content Preview</h2>
+              <div className="inline-flex bg-gray-900 border border-gray-800 rounded-lg p-1">
+                <button
+                  onClick={() => setSelectedLayout('main')}
+                  className={`px-3 py-1 rounded-md text-sm ${selectedLayout === 'main' ? 'bg-blue-500 text-white' : 'text-gray-300 hover:bg-gray-800'}`}
+                >
+                  Layout 1
+                </button>
+                <button
+                  onClick={() => setSelectedLayout('client')}
+                  className={`px-3 py-1 rounded-md text-sm ${selectedLayout === 'client' ? 'bg-blue-500 text-white' : 'text-gray-300 hover:bg-gray-800'}`}
+                >
+                  Layout 2
+                </button>
+              </div>
+            </div>
+            {previewSite && (
+              selectedLayout === 'main' ? (
+                <div className="rounded-lg overflow-hidden mb-6 border border-gray-800 bg-black h-[600px]">
+                  <ChatPage siteData={previewSite} embedded />
+                </div>
+              ) : (
+                <div className="rounded-lg overflow-hidden mb-6 border border-gray-800 bg-black h-[600px]">
+                  <ClientSitePage siteData={previewSite} />
+                </div>
+              )
+            )}
             
             <div className="space-y-6">
               {/* Hero Section */}

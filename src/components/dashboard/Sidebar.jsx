@@ -44,7 +44,6 @@ export default function Sidebar({ isOpen, setIsOpen }) {
     { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/dashboard/my-sites', icon: Globe, label: 'My Sites' },
     { path: '/dashboard/requests', icon: MessageSquare, label: 'Requests' },
-    { path: '/dashboard/portfolio', icon: Image, label: 'Portfolio' },
     { path: '/dashboard/integrations', icon: Plug, label: 'Integrations' },
     { path: '/dashboard/subscription', icon: CreditCard, label: 'Subscription' },
     { path: '/dashboard/settings', icon: Settings, label: 'Settings' },

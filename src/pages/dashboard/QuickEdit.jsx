@@ -3,6 +3,7 @@ import { Save, ExternalLink, RefreshCw, Sparkles, Palette, Monitor, Eye, X } fro
 import { getActiveSite, updateSite } from '../../utils/sitesStorage';
 import { getDesignSettings, saveDesignSettings, COLOR_SCHEMES, LANDING_TYPES, applyColorScheme } from '../../utils/designStorage';
 import ServicesManager from '../../components/dashboard/ServicesManager';
+import Portfolio from './Portfolio';
 import AISuggestions from '../../components/dashboard/AISuggestions';
 
 export default function QuickEdit() {
@@ -269,8 +270,10 @@ export default function QuickEdit() {
   const isLayout2 = designSettings.activeLanding === 'client';
   
   const sections = [
-    { id: 'hero', label: isLayout2 ? 'Content Showcase' : 'Main Hero / Title' },
+    { id: 'hero', label: isLayout2 ? 'Main Hero & Showcase' : 'Main Hero / Title' },
     { id: 'services', label: 'Services Section' },
+    { id: 'domain', label: 'Custom Domain' },
+    { id: 'portfolio', label: 'Portfolio' },
     { id: 'stats', label: 'Statistics & Achievements' },
     { id: 'testimonials', label: 'Client Testimonials' },
     { id: 'contacts', label: 'Contacts Section' },
@@ -282,8 +285,8 @@ export default function QuickEdit() {
     return <div className="flex items-center justify-center h-96">Loading...</div>;
   }
 
-  // Visual Design - отдельный fullscreen режим
-  if (activeSection === 'visual') {
+  // Visual Design - fullscreen режим отключён; секция рендерится инлайн ниже
+  if (false && activeSection === 'visual') {
     return (
       <div className="fixed inset-0 z-50 flex gap-0 bg-black">
         {/* Left: Live Preview - занимает всю левую часть */}
@@ -438,161 +441,280 @@ export default function QuickEdit() {
 
           {/* Hero Section */}
           {activeSection === 'hero' && (
-            <div className="space-y-4">
-              {isLayout2 ? (
-                /* Layout 2 - Настройки карусели левой панели */
-                <>
-                  <h2 className="text-xl font-semibold mb-4">Content Showcase Settings</h2>
-                  <p className="text-sm text-gray-400 mb-6">
-                    Choose which sections to display in the left panel carousel (Layout 2)
+            <div className="space-y-6">
+              {/* Main Hero - всегда показываем */}
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold mb-4">Main Hero / Title</h2>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Название компании</label>
+                  <input
+                    type="text"
+                    value={siteData.hero.companyName}
+                    onChange={(e) => updateHero('companyName', e.target.value)}
+                    className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Слоган</label>
+                  <input
+                    type="text"
+                    value={siteData.hero.tagline}
+                    onChange={(e) => updateHero('tagline', e.target.value)}
+                    className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Описание</label>
+                  <textarea
+                    value={siteData.hero.description}
+                    onChange={(e) => updateHero('description', e.target.value)}
+                    rows={4}
+                    className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    {siteData.hero.description.length} / 500 символов
                   </p>
-                  
-                  <div className="space-y-4 bg-gray-900 p-5 rounded-lg border border-gray-800">
-                    <h3 className="font-semibold mb-3">Enabled Sections</h3>
-                    
-                    <label className="flex items-center gap-3 cursor-pointer p-3 rounded hover:bg-gray-800 transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={siteData.showcase?.showAbout !== false}
-                        onChange={(e) => setSiteData(prev => ({
-                          ...prev,
-                          showcase: { ...prev.showcase, showAbout: e.target.checked }
-                        }))}
-                        className="w-5 h-5"
-                      />
-                      <div>
-                        <p className="font-medium">About / Hero</p>
-                        <p className="text-xs text-gray-500">Company name, tagline, description</p>
-                      </div>
-                    </label>
-                    
-                    <label className="flex items-center gap-3 cursor-pointer p-3 rounded hover:bg-gray-800 transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={siteData.showcase?.showPortfolio !== false}
-                        onChange={(e) => setSiteData(prev => ({
-                          ...prev,
-                          showcase: { ...prev.showcase, showPortfolio: e.target.checked }
-                        }))}
-                        className="w-5 h-5"
-                      />
-                      <div>
-                        <p className="font-medium">Portfolio</p>
-                        <p className="text-xs text-gray-500">Portfolio gallery showcase</p>
-                      </div>
-                    </label>
-                    
-                    <label className="flex items-center gap-3 cursor-pointer p-3 rounded hover:bg-gray-800 transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={siteData.showcase?.showServices !== false}
-                        onChange={(e) => setSiteData(prev => ({
-                          ...prev,
-                          showcase: { ...prev.showcase, showServices: e.target.checked }
-                        }))}
-                        className="w-5 h-5"
-                      />
-                      <div>
-                        <p className="font-medium">Services</p>
-                        <p className="text-xs text-gray-500">List of your services</p>
-                      </div>
-                    </label>
-                    
-                    <label className="flex items-center gap-3 cursor-pointer p-3 rounded hover:bg-gray-800 transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={siteData.showcase?.showStats !== false}
-                        onChange={(e) => setSiteData(prev => ({
-                          ...prev,
-                          showcase: { ...prev.showcase, showStats: e.target.checked }
-                        }))}
-                        className="w-5 h-5"
-                      />
-                      <div>
-                        <p className="font-medium">Statistics</p>
-                        <p className="text-xs text-gray-500">Achievements and numbers</p>
-                      </div>
-                    </label>
-                    
-                    <label className="flex items-center gap-3 cursor-pointer p-3 rounded hover:bg-gray-800 transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={siteData.showcase?.showTestimonials !== false}
-                        onChange={(e) => setSiteData(prev => ({
-                          ...prev,
-                          showcase: { ...prev.showcase, showTestimonials: e.target.checked }
-                        }))}
-                        className="w-5 h-5"
-                      />
-                      <div>
-                        <p className="font-medium">Testimonials</p>
-                        <p className="text-xs text-gray-500">Client reviews and feedback</p>
-                      </div>
-                    </label>
-                    
-                    <label className="flex items-center gap-3 cursor-pointer p-3 rounded hover:bg-gray-800 transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={siteData.showcase?.showContacts !== false}
-                        onChange={(e) => setSiteData(prev => ({
-                          ...prev,
-                          showcase: { ...prev.showcase, showContacts: e.target.checked }
-                        }))}
-                        className="w-5 h-5"
-                      />
-                      <div>
-                        <p className="font-medium">Contacts</p>
-                        <p className="text-xs text-gray-500">Contact information</p>
-                      </div>
-                    </label>
-                  </div>
-                  
-                  <div className="bg-blue-500 bg-opacity-10 border border-blue-500 border-opacity-30 rounded-lg p-4 text-sm">
-                    <p className="text-blue-400 font-medium mb-1">💡 Tip</p>
-                    <p className="text-gray-300">
-                      These sections will cycle automatically in the left panel every 5 seconds. Enable only the sections you want to showcase.
-                    </p>
-                  </div>
-                </>
-              ) : (
-                /* Layout 1 - Обычный Hero */
+                </div>
+              </div>
+
+              {/* Content Showcase Settings - только для Layout 2 */}
+              {isLayout2 && (
                 <>
-                  <h2 className="text-xl font-semibold mb-4">Main Hero / Title</h2>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Название компании</label>
-                    <input
-                      type="text"
-                      value={siteData.hero.companyName}
-                      onChange={(e) => updateHero('companyName', e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Слоган</label>
-                    <input
-                      type="text"
-                      value={siteData.hero.tagline}
-                      onChange={(e) => updateHero('tagline', e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Описание</label>
-                    <textarea
-                      value={siteData.hero.description}
-                      onChange={(e) => updateHero('description', e.target.value)}
-                      rows={4}
-                      className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      {siteData.hero.description.length} / 500 символов
+                  <div className="border-t border-gray-800 pt-6">
+                    <h2 className="text-xl font-semibold mb-4">Content Showcase Settings</h2>
+                    <p className="text-sm text-gray-400 mb-6">
+                      Choose which sections to display in the left panel carousel (Layout 2)
                     </p>
+                    
+                    <div className="space-y-4 bg-gray-900 p-5 rounded-lg border border-gray-800">
+                      <h3 className="font-semibold mb-3">Enabled Sections</h3>
+                      
+                      <label className="flex items-center gap-3 cursor-pointer p-3 rounded hover:bg-gray-800 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={siteData.showcase?.showAbout !== false}
+                          onChange={(e) => setSiteData(prev => ({
+                            ...prev,
+                            showcase: { ...prev.showcase, showAbout: e.target.checked }
+                          }))}
+                          className="w-5 h-5"
+                        />
+                        <div>
+                          <p className="font-medium">About / Hero</p>
+                          <p className="text-xs text-gray-500">Company name, tagline, description</p>
+                        </div>
+                      </label>
+                      
+                      <label className="flex items-center gap-3 cursor-pointer p-3 rounded hover:bg-gray-800 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={siteData.showcase?.showPortfolio !== false}
+                          onChange={(e) => setSiteData(prev => ({
+                            ...prev,
+                            showcase: { ...prev.showcase, showPortfolio: e.target.checked }
+                          }))}
+                          className="w-5 h-5"
+                        />
+                        <div>
+                          <p className="font-medium">Portfolio</p>
+                          <p className="text-xs text-gray-500">Portfolio gallery showcase</p>
+                        </div>
+                      </label>
+                      
+                      <label className="flex items-center gap-3 cursor-pointer p-3 rounded hover:bg-gray-800 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={siteData.showcase?.showServices !== false}
+                          onChange={(e) => setSiteData(prev => ({
+                            ...prev,
+                            showcase: { ...prev.showcase, showServices: e.target.checked }
+                          }))}
+                          className="w-5 h-5"
+                        />
+                        <div>
+                          <p className="font-medium">Services</p>
+                          <p className="text-xs text-gray-500">List of your services</p>
+                        </div>
+                      </label>
+                      
+                      <label className="flex items-center gap-3 cursor-pointer p-3 rounded hover:bg-gray-800 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={siteData.showcase?.showStats !== false}
+                          onChange={(e) => setSiteData(prev => ({
+                            ...prev,
+                            showcase: { ...prev.showcase, showStats: e.target.checked }
+                          }))}
+                          className="w-5 h-5"
+                        />
+                        <div>
+                          <p className="font-medium">Statistics</p>
+                          <p className="text-xs text-gray-500">Achievements and numbers</p>
+                        </div>
+                      </label>
+                      
+                      <label className="flex items-center gap-3 cursor-pointer p-3 rounded hover:bg-gray-800 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={siteData.showcase?.showTestimonials !== false}
+                          onChange={(e) => setSiteData(prev => ({
+                            ...prev,
+                            showcase: { ...prev.showcase, showTestimonials: e.target.checked }
+                          }))}
+                          className="w-5 h-5"
+                        />
+                        <div>
+                          <p className="font-medium">Testimonials</p>
+                          <p className="text-xs text-gray-500">Client reviews and feedback</p>
+                        </div>
+                      </label>
+                      
+                      <label className="flex items-center gap-3 cursor-pointer p-3 rounded hover:bg-gray-800 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={siteData.showcase?.showContacts !== false}
+                          onChange={(e) => setSiteData(prev => ({
+                            ...prev,
+                            showcase: { ...prev.showcase, showContacts: e.target.checked }
+                          }))}
+                          className="w-5 h-5"
+                        />
+                        <div>
+                          <p className="font-medium">Contacts</p>
+                          <p className="text-xs text-gray-500">Contact information</p>
+                        </div>
+                      </label>
+                      
+                      <div className="bg-blue-500 bg-opacity-10 border border-blue-500 border-opacity-30 rounded-lg p-4 text-sm">
+                        <p className="text-blue-400 font-medium mb-1">💡 Tip</p>
+                        <p className="text-gray-300">
+                          These sections will cycle automatically in the left panel every 5 seconds. Enable only the sections you want to showcase.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </>
               )}
+            </div>
+          )}
+
+          {/* Visual Design - inline controls */}
+          {activeSection === 'visual' && (
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold">Visual Design</h2>
+
+              {/* Live preview link */}
+              <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm text-gray-400">
+                  <Eye size={16} className="text-gray-400" />
+                  <span>Live preview:</span>
+                  <a href={currentSite?.url || '/'} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">
+                    {currentSite?.url || '/'}
+                  </a>
+                </div>
+                <button
+                  onClick={() => setPreviewKey(prev => prev + 1)}
+                  className="px-3 py-1.5 text-xs bg-gray-800 border border-gray-700 rounded hover:bg-gray-700"
+                >
+                  Refresh Preview
+                </button>
+              </div>
+
+              {/* Inline Live Preview */}
+              <div className="bg-black border border-gray-800 rounded-lg overflow-hidden">
+                <iframe
+                  key={`inline-preview-${previewKey}-${currentSite?.id}-${designSettings.colorScheme}-${designSettings.activeLanding}`}
+                  src={currentSite?.url || '/'}
+                  title="Live Preview"
+                  className="w-full h-[560px]"
+                />
+              </div>
+
+              {/* Landing Type */}
+              <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Monitor size={18} className="text-blue-400" />
+                  <h4 className="text-sm font-semibold">Тип лендинга</h4>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {Object.entries(LANDING_TYPES).map(([key, landing]) => (
+                    <button
+                      key={key}
+                      onClick={() => handleLandingTypeChange(key)}
+                      className={`text-left p-3 rounded-lg border transition-all ${
+                        designSettings.activeLanding === key
+                          ? 'border-blue-500 bg-blue-500/10'
+                          : 'border-gray-700 hover:border-gray-600 bg-gray-800'
+                      }`}
+                    >
+                      <p className="text-sm font-medium">{landing.name}</p>
+                      <p className="text-xs text-gray-500">{landing.path}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Color Palette */}
+              <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Palette size={18} className="text-purple-400" />
+                  <h4 className="text-sm font-semibold">Цветовая палитра</h4>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {Object.entries(COLOR_SCHEMES).map(([key, scheme]) => (
+                    <button
+                      key={key}
+                      onClick={() => handleColorSchemeChange(key)}
+                      className={`p-4 rounded-lg border text-left transition-all ${
+                        designSettings.colorScheme === key
+                          ? 'border-purple-500 ring-2 ring-purple-500/30'
+                          : 'border-gray-700 hover:border-gray-600'
+                      }`}
+                      style={{ backgroundColor: scheme.background }}
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-sm font-medium" style={{ color: scheme.text }}>{scheme.name}</p>
+                        {designSettings.colorScheme === key && (
+                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: scheme.primary }} />
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <span className="w-6 h-6 rounded-md" style={{ backgroundColor: scheme.primary }} />
+                        <span className="w-6 h-6 rounded-md" style={{ backgroundColor: scheme.secondary }} />
+                        <span className="w-6 h-6 rounded-md" style={{ backgroundColor: scheme.accent }} />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Save / Preview */}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => {
+                    if (currentSite) updateSite(currentSite.id, { design: designSettings });
+                    setSaved(true);
+                    setTimeout(() => setSaved(false), 1500);
+                  }}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition flex items-center gap-2"
+                >
+                  <Save size={16} />
+                  Save Design
+                </button>
+                <a
+                  href={currentSite?.url || '/'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 border border-gray-700 rounded-lg hover:bg-gray-800 transition flex items-center gap-2"
+                >
+                  <ExternalLink size={16} />
+                  Open Preview
+                </a>
+                {saved && <span className="text-sm text-green-400">Saved!</span>}
+              </div>
             </div>
           )}
 
@@ -606,6 +728,89 @@ export default function QuickEdit() {
                 </p>
               </div>
               <ServicesManager />
+            </div>
+          )}
+
+          {/* Custom Domain Section */}
+          {activeSection === 'domain' && (
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold">Custom Domain</h2>
+
+              <div className="bg-yellow-500 bg-opacity-10 border border-yellow-500 border-opacity-30 rounded-lg p-4">
+                <p className="text-sm text-yellow-400">
+                  Подключите ваш собственный домен. Это демонстрационный интерфейс (hardcoded) для презентации, сохранение идёт в текущий активный сайт.
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Domain input */}
+                <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Ваш домен</label>
+                    <input
+                      type="text"
+                      value={currentSite?.customDomain || ''}
+                      onChange={(e) => {
+                        if (!currentSite) return;
+                        updateSite(currentSite.id, { customDomain: e.target.value });
+                      }}
+                      placeholder="yourdomain.com"
+                      className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 text-sm text-gray-400">
+                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                    {currentSite?.customDomain ? 'DNS not verified yet' : 'No domain connected'}
+                  </div>
+
+                  <button
+                    onClick={() => alert('DNS verification simulated for demo')}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+                  >
+                    Verify DNS
+                  </button>
+                </div>
+
+                {/* DNS records */}
+                <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+                  <h3 className="font-semibold mb-3">DNS Records</h3>
+                  <p className="text-sm text-gray-400 mb-4">Добавьте записи у вашего регистратора доменов:</p>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex items-center justify-between bg-gray-950 border border-gray-800 rounded p-3">
+                      <div>
+                        <p className="font-medium">A</p>
+                        <p className="text-gray-400">@ → 76.76.21.21</p>
+                      </div>
+                      <button className="px-2 py-1 text-xs border border-gray-700 rounded hover:bg-gray-800" onClick={() => navigator.clipboard.writeText('76.76.21.21')}>Copy</button>
+                    </div>
+                    <div className="flex items-center justify-between bg-gray-950 border border-gray-800 rounded p-3">
+                      <div>
+                        <p className="font-medium">CNAME</p>
+                        <p className="text-gray-400">www → cname.vercel-dns.com</p>
+                      </div>
+                      <button className="px-2 py-1 text-xs border border-gray-700 rounded hover:bg-gray-800" onClick={() => navigator.clipboard.writeText('cname.vercel-dns.com')}>Copy</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tips */}
+              <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 text-sm text-gray-400">
+                • Изменения DNS могут применяться до 24 часов.\n<br />
+                • После добавления записей нажмите Verify DNS.
+              </div>
+            </div>
+          )}
+
+          {/* Portfolio Section - embedded existing manager */}
+          {activeSection === 'portfolio' && (
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Портфолио</h2>
+              <div className="mb-4 bg-blue-500 bg-opacity-10 border border-blue-500 border-opacity-30 rounded-lg p-4">
+                <p className="text-sm text-blue-400">Управляйте фотографиями, видео, кейсами и внешними ссылками вашего сайта</p>
+              </div>
+              <Portfolio />
             </div>
           )}
 

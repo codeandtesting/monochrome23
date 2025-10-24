@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, Edit, RefreshCw, Check } from 'lucide-react';
+import SignUpPage from '../../components/SignUpModal';
 
 export default function AIWizardPreview() {
   const navigate = useNavigate();
+  const [showSignUp, setShowSignUp] = useState(false);
 
   const contentSections = [
     {
@@ -42,6 +44,11 @@ export default function AIWizardPreview() {
   ];
 
   const handleContinue = () => {
+    setShowSignUp(true);
+  };
+
+  const handleSignUpComplete = () => {
+    setShowSignUp(false);
     navigate('/dashboard');
   };
 
@@ -62,6 +69,70 @@ export default function AIWizardPreview() {
           >
             <X />
           </button>
+        </div>
+      </div>
+
+      {/* Website Preview - Layout 1 */}
+      <div className="border-b border-gray-800 bg-gray-900 p-6">
+        <div className="max-w-5xl mx-auto">
+          <h3 className="text-xl font-bold mb-4">Предварительный просмотр сайта (Layout 1)</h3>
+          
+          {/* Preview Container */}
+          <div className="bg-white rounded-lg shadow-xl p-8 text-gray-900">
+            {/* Hero Section */}
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold mb-2">Cat Farm</h1>
+              <p className="text-xl text-gray-600 mb-4">Pioneering the Future of Feline Breeds</p>
+              <p className="text-gray-700">
+                We are a premier cattery in Latvia dedicated to the art and science of creating new, healthy, and beautiful cat breeds. Our expert team combines genetic expertise with a deep love for felines to develop unique companions with exceptional temperaments and characteristics.
+              </p>
+            </div>
+
+            {/* Services Preview */}
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold mb-4 border-b pb-2">SERVICES (8)</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-gray-50 p-4 rounded">
+                  <h3 className="font-semibold mb-2">Breed Development Program</h3>
+                  <p className="text-sm text-gray-600">Our core initiative to genetically select and establish new, distinct cat breeds.</p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded">
+                  <h3 className="font-semibold mb-2">Pedigree Management</h3>
+                  <p className="text-sm text-gray-600">Meticulous tracking and certification of lineage for health and breed purity.</p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded">
+                  <h3 className="font-semibold mb-2">Health & Wellness Screening</h3>
+                  <p className="text-sm text-gray-600">Comprehensive genetic and health testing to ensure the vitality of our cats.</p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded text-center">
+                  <p className="text-sm text-gray-600">+5 more services...</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Statistics Preview */}
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold mb-4 border-b pb-2">STATISTICS (Editable)</h2>
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <p className="text-2xl font-bold">15+</p>
+                  <p className="text-sm text-gray-600">Breed Projects</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">100%</p>
+                  <p className="text-sm text-gray-600">Health Screened</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">5</p>
+                  <p className="text-sm text-gray-600">International Awards</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="text-center text-sm text-gray-500">
+              This is a preview of how your website will look with Layout 1 design
+            </div>
+          </div>
         </div>
       </div>
 
@@ -193,11 +264,19 @@ export default function AIWizardPreview() {
               className="flex-1 px-6 py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
             >
               <Check size={18} />
-              Всё отлично, продолжить
+              Finish and go to dashboard
             </button>
           </div>
         </div>
       </div>
+
+      {/* Sign Up Modal */}
+      {showSignUp && (
+        <SignUpPage
+          onClose={() => setShowSignUp(false)}
+          onComplete={handleSignUpComplete}
+        />
+      )}
     </div>
   );
 }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check, Sparkles } from 'lucide-react';
 import { createSite } from '../../utils/sitesStorage';
+import SignUpPage from '../../components/SignUpModal';
 
 const COLOR_SCHEMES = [
   { id: 'default', name: 'Classic Dark', primary: '#000000', accent: '#ffffff' },
@@ -18,6 +19,7 @@ export default function ManualStep4() {
   const [companyInfo, setCompanyInfo] = useState(null);
   const [services, setServices] = useState([]);
   const [isCreating, setIsCreating] = useState(false);
+  const [showSignUp, setShowSignUp] = useState(false);
 
   useEffect(() => {
     // Load all previous steps data
@@ -94,9 +96,10 @@ export default function ManualStep4() {
       localStorage.removeItem('manual_step3_contacts');
       localStorage.removeItem('manual_step3_social');
 
-      // Redirect to dashboard
+      // Show sign up modal
       setTimeout(() => {
-        navigate('/dashboard');
+        setIsCreating(false);
+        setShowSignUp(true);
       }, 500);
 
     } catch (error) {
@@ -104,6 +107,11 @@ export default function ManualStep4() {
       alert('Failed to create site. Please try again.');
       setIsCreating(false);
     }
+  };
+
+  const handleSignUpComplete = () => {
+    setShowSignUp(false);
+    navigate('/dashboard');
   };
 
   if (!companyInfo) {
@@ -229,6 +237,14 @@ export default function ManualStep4() {
           </button>
         </div>
       </div>
+
+      {/* Sign Up Modal */}
+      {showSignUp && (
+        <SignUpPage
+          onClose={() => setShowSignUp(false)}
+          onComplete={handleSignUpComplete}
+        />
+      )}
     </div>
   );
 }

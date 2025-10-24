@@ -27,6 +27,7 @@ import AIWizardStep1 from './pages/onboarding/AIWizardStep1';
 import AIWizardStep2 from './pages/onboarding/AIWizardStep2';
 import AIWizardStep3 from './pages/onboarding/AIWizardStep3';
 import AIWizardPreview from './pages/onboarding/AIWizardPreview';
+import SignUp from './pages/onboarding/SignUp';
 import ManualStep1 from './pages/onboarding/ManualStep1';
 import ManualStep2 from './pages/onboarding/ManualStep2';
 import ManualStep3 from './pages/onboarding/ManualStep3';
@@ -52,6 +53,7 @@ export default function App() {
           <Route path="/onboarding/ai-wizard/step2" element={<AIWizardStep2 />} />
           <Route path="/onboarding/ai-wizard/step3" element={<AIWizardStep3 />} />
           <Route path="/onboarding/ai-wizard/preview" element={<AIWizardPreview />} />
+          <Route path="/onboarding/signup" element={<SignUp />} />
           
           {/* Manual Setup Routes */}
           <Route path="/onboarding/manual/step1" element={<ManualStep1 />} />
