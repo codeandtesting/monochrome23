@@ -175,13 +175,6 @@ export default function ChatPage({ siteData, embedded = false }) {
     }
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
   const isExpanded = messages.length > 1;
 
   // Если выбран Client Site layout, показываем ClientSitePage
@@ -191,30 +184,114 @@ export default function ChatPage({ siteData, embedded = false }) {
 
   // Иначе показываем стандартный Main Landing layout
   return (
-    <div className={`landing-theme ${embedded ? 'h-full' : 'h-screen'} bg-black text-white flex flex-col p-4 overflow-hidden` } style={{contain: 'layout'}}>
-      {/* Верхняя часть - заголовок */}
-      <div className={`text-center ${isExpanded ? 'mb-3' : 'mb-4'} z-10`}> 
-        <h1 className={`font-bold ${isExpanded ? 'text-2xl mb-2' : 'text-3xl sm:text-4xl lg:text-5xl mb-3'}`}>
-          {companyName}
-        </h1>
-        {!isExpanded && (
-          <>
-            <h2 className="text-lg sm:text-xl lg:text-2xl font-light mb-3">
+    <div className={`landing-theme ${embedded ? 'h-full' : 'h-screen'} bg-black text-white flex flex-col p-4 overflow-hidden`} style={{contain: 'layout'}}>
+
+      {/* Если чат НЕ расширен - центрируем контент */}
+      {!isExpanded && (
+        <div className="flex-1 flex flex-col items-center justify-center pb-32">
+          <div className="text-center max-w-3xl px-4 mb-8">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4">
+              {companyName}
+            </h1>
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-light text-gray-300 mb-6">
               {siteData?.data?.hero?.tagline || 'Your Vision, Infinite Possibilities'}
             </h2>
-            <p className="text-gray-400 text-sm sm:text-base max-w-xl mx-auto px-2">
+            <p className="text-gray-400 text-sm sm:text-base lg:text-lg max-w-2xl mx-auto leading-relaxed mb-8">
               {siteData?.data?.hero?.description || 'UK-based software development company with 15+ years of expertise in Blockchain, Web3, Casino, Gaming, and Full-Stack Development. 500+ projects delivered worldwide.'}
             </p>
-          </>
-        )}
-      </div>
+          </div>
 
-      {/* Убираем spacer полностью, чтобы ничто не перекрывало чат */}
+          {/* Input Area - центрируем вместе с контентом */}
+          <div className="w-full max-w-3xl px-4">
+            <div className="relative">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+                placeholder={`Ask about ${companyName}'s services...`}
+                className="w-full px-6 py-4 pr-14 bg-gray-900 text-sm sm:text-base text-white rounded-full focus:outline-none focus:ring-2 ring-theme-primary placeholder-gray-500 border border-gray-700"
+                disabled={isTyping}
+              />
+              <button
+                onClick={handleSend}
+                disabled={isTyping || !input.trim()}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-theme-primary text-white p-2.5 rounded-full hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Send size={18} />
+              </button>
+            </div>
 
-      {/* Область сообщений */}
-      {messages.length > 1 && (
-        <div className="flex-1 overflow-y-auto mb-6 space-y-4 relative z-10" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
-              {messages.slice(1).map((message, index) => (
+            {/* Social Media Links - под input */}
+            <div className="flex justify-center items-center gap-5 mt-4">
+              <a
+                href="https://facebook.com/progressit"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-500 hover:text-white transition-colors"
+                aria-label="Facebook"
+              >
+                <Facebook size={18} />
+              </a>
+              <a
+                href="https://instagram.com/progressit"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-500 hover:text-white transition-colors"
+                aria-label="Instagram"
+              >
+                <Instagram size={18} />
+              </a>
+              <a
+                href="https://twitter.com/progressit"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-500 hover:text-white transition-colors"
+                aria-label="X (Twitter)"
+              >
+                <Twitter size={18} />
+              </a>
+              <a
+                href="https://discord.gg/progressit"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-500 hover:text-white transition-colors"
+                aria-label="Discord"
+              >
+                <MessageCircle size={18} />
+              </a>
+              <a
+                href="https://youtube.com/@progressit"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-500 hover:text-white transition-colors"
+                aria-label="YouTube"
+              >
+                <Youtube size={18} />
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Если чат расширен - показываем заголовок вверху и сообщения */}
+      {isExpanded && (
+        <>
+          {/* Компактный заголовок вверху */}
+          <div className="text-center mb-4 z-10">
+            <h1 className="text-2xl sm:text-3xl font-bold">
+              {companyName}
+            </h1>
+          </div>
+
+          {/* Область сообщений */}
+          <div className="flex-1 overflow-y-auto mb-6 space-y-4 relative z-10" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
+            {messages.slice(1).map((message, index) => (
                 <div
                   key={index}
                   className={`flex gap-2 sm:gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
@@ -322,17 +399,24 @@ export default function ChatPage({ siteData, embedded = false }) {
                 </div>
               )}
               <div ref={messagesEndRef} />
-        </div>
+          </div>
+        </>
       )}
 
-      {/* Input Area - всегда внизу перед иконками */}
-      <div className="w-full max-w-3xl mx-auto mt-auto relative z-20">
-        <div className="relative">
+      {/* Input Area для расширенного чата - внизу */}
+      {isExpanded && (
+        <div className="w-full max-w-3xl mx-auto mt-auto relative z-20">
+          <div className="relative">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
               placeholder={`Ask about ${companyName}'s services...`}
               className="w-full px-4 py-3 pr-12 bg-gray-900 text-sm sm:text-base text-white rounded-full focus:outline-none focus:ring-2 ring-theme-primary placeholder-gray-500 border border-gray-700"
               disabled={isTyping}
@@ -344,57 +428,58 @@ export default function ChatPage({ siteData, embedded = false }) {
             >
               <Send size={18} />
             </button>
-        </div>
+          </div>
 
-        {/* Social Media Links - прямо под input */}
-        <div className="flex justify-center items-center gap-5 mt-4 pb-2">
-        <a
-          href="https://facebook.com/progressit"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-gray-500 hover:text-white transition-colors"
-          aria-label="Facebook"
-        >
-          <Facebook size={18} />
-        </a>
-        <a
-          href="https://instagram.com/progressit"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-gray-500 hover:text-white transition-colors"
-          aria-label="Instagram"
-        >
-          <Instagram size={18} />
-        </a>
-        <a
-          href="https://twitter.com/progressit"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-gray-500 hover:text-white transition-colors"
-          aria-label="X (Twitter)"
-        >
-          <Twitter size={18} />
-        </a>
-        <a
-          href="https://discord.gg/progressit"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-gray-500 hover:text-white transition-colors"
-          aria-label="Discord"
-        >
-          <MessageCircle size={18} />
-        </a>
-        <a
-          href="https://youtube.com/@progressit"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-gray-500 hover:text-white transition-colors"
-          aria-label="YouTube"
-        >
-          <Youtube size={18} />
-        </a>
+          {/* Social Media Links - прямо под input */}
+          <div className="flex justify-center items-center gap-5 mt-4 pb-2">
+            <a
+              href="https://facebook.com/progressit"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-500 hover:text-white transition-colors"
+              aria-label="Facebook"
+            >
+              <Facebook size={18} />
+            </a>
+            <a
+              href="https://instagram.com/progressit"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-500 hover:text-white transition-colors"
+              aria-label="Instagram"
+            >
+              <Instagram size={18} />
+            </a>
+            <a
+              href="https://twitter.com/progressit"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-500 hover:text-white transition-colors"
+              aria-label="X (Twitter)"
+            >
+              <Twitter size={18} />
+            </a>
+            <a
+              href="https://discord.gg/progressit"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-500 hover:text-white transition-colors"
+              aria-label="Discord"
+            >
+              <MessageCircle size={18} />
+            </a>
+            <a
+              href="https://youtube.com/@progressit"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-500 hover:text-white transition-colors"
+              aria-label="YouTube"
+            >
+              <Youtube size={18} />
+            </a>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

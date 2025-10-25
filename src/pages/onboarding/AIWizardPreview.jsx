@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, Edit, RefreshCw, Check } from 'lucide-react';
 import SignUpPage from '../../components/SignUpModal';
+import ProgressSteps from '../../components/ProgressSteps';
 
 export default function AIWizardPreview() {
   const navigate = useNavigate();
@@ -54,6 +55,15 @@ export default function AIWizardPreview() {
 
   return (
     <div className="min-h-screen bg-black text-white">
+      {/* Progress Steps */}
+      <div className="max-w-5xl mx-auto pt-8 px-6">
+        <ProgressSteps
+          currentStep={4}
+          totalSteps={4}
+          steps={['Basic Info', 'Services', 'Details', 'Preview']}
+        />
+      </div>
+
       {/* Header */}
       <div className="border-b border-gray-800 p-6">
         <div className="max-w-5xl mx-auto flex justify-between items-center">

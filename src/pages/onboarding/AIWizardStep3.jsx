@@ -4,11 +4,13 @@ import { Check, ArrowRight, Phone, Mail, Globe, Facebook, Instagram, Twitter, Me
 import { createSite } from '../../utils/sitesStorage';
 import ChatPage from '../ChatPage';
 import ClientSitePage from '../ClientSitePage';
+import ProgressSteps from '../../components/ProgressSteps';
 
 export default function AIWizardStep3() {
   const navigate = useNavigate();
   const [generatedContent, setGeneratedContent] = useState(null);
   const [selectedLayout, setSelectedLayout] = useState('main'); // 'main' (Layout 1) | 'client' (Layout 2)
+  const [selectedColor, setSelectedColor] = useState('purple'); // Color scheme
   const [contacts, setContacts] = useState({
     phone: '',
     email: '',
@@ -22,6 +24,8 @@ export default function AIWizardStep3() {
     youtube: ''
   });
   const [stats, setStats] = useState([]);
+  const [selectedDomain, setSelectedDomain] = useState('');
+  const [customDomain, setCustomDomain] = useState('');
 
   useEffect(() => {
     const content = localStorage.getItem('generatedContent');
@@ -32,7 +36,36 @@ export default function AIWizardStep3() {
     const parsed = JSON.parse(content);
     setGeneratedContent(parsed);
     setStats(parsed.stats || []);
+
+    // Auto-select first domain option
+    if (parsed.hero?.companyName) {
+      const cleanName = parsed.hero.companyName.toLowerCase().replace(/[^a-z0-9]/g, '');
+      setSelectedDomain(`${cleanName}.sixtea.com`);
+    }
   }, []);
+
+  // Generate domain suggestions based on company name
+  const generateDomainSuggestions = (companyName) => {
+    if (!companyName) return [];
+
+    const cleanName = companyName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const firstWord = companyName.split(' ')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+    const initials = companyName
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toLowerCase();
+
+    return [
+      `${cleanName}.sixtea.com`,
+      `${firstWord}.sixtea.com`,
+      `${initials}.sixtea.com`
+    ].filter((domain, index, self) => self.indexOf(domain) === index); // Remove duplicates
+  };
+
+  const domainSuggestions = useMemo(() => {
+    return generatedContent ? generateDomainSuggestions(generatedContent.hero?.companyName) : [];
+  }, [generatedContent]);
 
   const handleFinish = () => {
     // Подготавливаем данные сайта
@@ -75,7 +108,7 @@ export default function AIWizardStep3() {
       services: services,
       portfolio: [],
       design: {
-        colorScheme: 'default',
+        colorScheme: selectedColor,
         activeLanding: selectedLayout
       }
     });
@@ -143,11 +176,11 @@ export default function AIWizardStep3() {
       services: mappedServices,
       portfolio: [],
       design: {
-        colorScheme: 'default',
+        colorScheme: selectedColor,
         activeLanding: selectedLayout
       }
     };
-  }, [generatedContent, contacts, social, stats, selectedLayout]);
+  }, [generatedContent, contacts, social, stats, selectedLayout, selectedColor]);
 
   if (!generatedContent) {
     return <div className="min-h-screen bg-black flex items-center justify-center">
@@ -158,6 +191,13 @@ export default function AIWizardStep3() {
   return (
     <div className="min-h-screen bg-black text-white p-4">
       <div className="max-w-7xl mx-auto py-8">
+        {/* Progress Steps */}
+        <ProgressSteps
+          currentStep={3}
+          totalSteps={4}
+          steps={['Basic Info', 'Services', 'Details', 'Preview']}
+        />
+
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-12 h-12 bg-green-500 rounded-full mb-4">
@@ -165,99 +205,227 @@ export default function AIWizardStep3() {
           </div>
           <h1 className="text-4xl font-bold mb-2">Your Website is Ready!</h1>
           <p className="text-gray-400">
-            Step 3 of 3 • Review and add your contact information
+            Review and add your contact information
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Left: Preview (Layout 1 Website Preview) */}
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-semibold">Generated Content Preview</h2>
-              <div className="inline-flex bg-gray-900 border border-gray-800 rounded-lg p-1">
-                <button
-                  onClick={() => setSelectedLayout('main')}
-                  className={`px-3 py-1 rounded-md text-sm ${selectedLayout === 'main' ? 'bg-blue-500 text-white' : 'text-gray-300 hover:bg-gray-800'}`}
-                >
-                  Layout 1
-                </button>
-                <button
-                  onClick={() => setSelectedLayout('client')}
-                  className={`px-3 py-1 rounded-md text-sm ${selectedLayout === 'client' ? 'bg-blue-500 text-white' : 'text-gray-300 hover:bg-gray-800'}`}
-                >
-                  Layout 2
-                </button>
+        {/* Preview Section - Full Width */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4">Generated Content Preview</h2>
+
+          {/* Layout & Color Selectors in one row */}
+          <div className="flex flex-wrap items-center gap-4 mb-4">
+            <div className="inline-flex bg-gray-900 border border-gray-800 rounded-lg p-1">
+              <button
+                onClick={() => setSelectedLayout('main')}
+                className={`px-4 py-2 rounded-md text-sm font-medium ${selectedLayout === 'main' ? 'bg-blue-500 text-white' : 'text-gray-300 hover:bg-gray-800'}`}
+              >
+                Layout 1
+              </button>
+              <button
+                onClick={() => setSelectedLayout('client')}
+                className={`px-4 py-2 rounded-md text-sm font-medium ${selectedLayout === 'client' ? 'bg-blue-500 text-white' : 'text-gray-300 hover:bg-gray-800'}`}
+              >
+                Layout 2
+              </button>
+            </div>
+
+            {/* Color Scheme Selector - Inline */}
+            <div className="flex items-center gap-3 bg-gray-900 border border-gray-800 rounded-lg p-3">
+              <label className="text-sm font-medium whitespace-nowrap">Color Scheme:</label>
+              <div className="flex gap-2">
+                {[
+                  { name: 'purple', color: '#a855f7', label: 'Purple' },
+                  { name: 'blue', color: '#3b82f6', label: 'Blue' },
+                  { name: 'green', color: '#10b981', label: 'Green' },
+                  { name: 'orange', color: '#f97316', label: 'Orange' },
+                  { name: 'pink', color: '#ec4899', label: 'Pink' },
+                  { name: 'red', color: '#ef4444', label: 'Red' }
+                ].map((scheme) => (
+                  <button
+                    key={scheme.name}
+                    onClick={() => setSelectedColor(scheme.name)}
+                    className={`relative w-8 h-8 rounded-lg border-2 transition-all ${
+                      selectedColor === scheme.name
+                        ? 'border-white scale-110'
+                        : 'border-gray-700 hover:border-gray-500'
+                    }`}
+                    style={{ backgroundColor: scheme.color }}
+                    title={scheme.label}
+                  >
+                    {selectedColor === scheme.name && (
+                      <Check size={14} className="absolute inset-0 m-auto text-white" />
+                    )}
+                  </button>
+                ))}
               </div>
             </div>
-            {previewSite && (
-              selectedLayout === 'main' ? (
-                <div className="rounded-lg overflow-hidden mb-6 border border-gray-800 bg-black h-[600px]">
-                  <ChatPage siteData={previewSite} embedded />
-                </div>
-              ) : (
-                <div className="rounded-lg overflow-hidden mb-6 border border-gray-800 bg-black h-[600px]">
+          </div>
+
+          {/* Preview Window - Full Width */}
+          {previewSite && (
+            selectedLayout === 'main' ? (
+              <div className="rounded-lg overflow-hidden border border-gray-800 bg-black h-[700px]">
+                <ChatPage siteData={previewSite} embedded />
+              </div>
+            ) : (
+              <div className="rounded-lg overflow-hidden border border-gray-800 bg-black h-[700px] relative">
+                <div style={{
+                  transform: 'scale(0.5)',
+                  transformOrigin: 'top left',
+                  width: '200%',
+                  height: '200%'
+                }}>
                   <ClientSitePage siteData={previewSite} />
                 </div>
-              )
-            )}
-            
-            <div className="space-y-6">
+              </div>
+            )
+          )}
+        </div>
+
+        {/* Domain Selection Section */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4">Choose Your Domain</h2>
+          <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+            <p className="text-gray-400 text-sm mb-4">Select a domain for your website or enter your own</p>
+
+            {/* Domain Suggestions */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+              {domainSuggestions.map((domain, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    setSelectedDomain(domain);
+                    setCustomDomain('');
+                  }}
+                  className={`p-4 rounded-lg border-2 transition-all text-left ${
+                    selectedDomain === domain && !customDomain
+                      ? 'border-blue-500 bg-blue-500/10'
+                      : 'border-gray-700 hover:border-gray-600 bg-gray-800'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-sm">{domain}</span>
+                    {selectedDomain === domain && !customDomain && (
+                      <Check size={18} className="text-blue-500" />
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Custom Domain Input */}
+            <div>
+              <label className="block text-sm font-medium mb-2">Or enter your custom subdomain:</label>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 flex items-center bg-gray-800 border border-gray-700 rounded-lg focus-within:ring-2 focus-within:ring-blue-500">
+                  <input
+                    type="text"
+                    value={customDomain}
+                    onChange={(e) => {
+                      const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                      setCustomDomain(value);
+                      if (value) {
+                        setSelectedDomain('');
+                      }
+                    }}
+                    placeholder="mycompany"
+                    className="flex-1 px-4 py-3 bg-transparent focus:outline-none font-mono text-sm"
+                  />
+                  <span className="px-3 text-gray-500 font-mono text-sm">.sixtea.com</span>
+                </div>
+                {customDomain && (
+                  <Check size={20} className="text-green-500" />
+                )}
+              </div>
+            </div>
+
+            {/* Selected Domain Display */}
+            <div className="mt-4 p-3 bg-gray-800 rounded-lg border border-gray-700">
+              <p className="text-xs text-gray-400 mb-1">Your website will be available at:</p>
+              <p className="font-mono text-blue-400 font-medium">
+                https://{customDomain ? `${customDomain}.sixtea.com` : selectedDomain || 'your-domain.sixtea.com'}
+              </p>
+            </div>
+
+            {/* Custom Domain Note */}
+            <div className="mt-3 flex items-start gap-2 text-sm text-gray-400">
+              <span className="text-blue-400 mt-0.5">ℹ️</span>
+              <p>
+                No worries! Later you can setup a fully custom domain (e.g., yourcompany.com)
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Two Column Layout - Content Details & Contact Form */}
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* Left Column - Content Details */}
+          <div>
+            <h2 className="text-xl font-semibold mb-2">Content Details</h2>
+            <p className="text-sm text-gray-400 mb-4">
+              More flexible setup of your website waiting for you in your personal dashboard. No worries, we got every aspect covered!
+            </p>
+            {/* Compact Content Cards */}
+            <div className="space-y-3">
               {/* Hero Section */}
-              <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
-                <h3 className="text-sm font-medium text-gray-400 mb-3">HERO SECTION</h3>
-                <h4 className="text-2xl font-bold mb-2">{generatedContent.hero.companyName}</h4>
-                <p className="text-blue-400 mb-3">{generatedContent.hero.tagline}</p>
-                <p className="text-gray-400 text-sm">{generatedContent.hero.description}</p>
+              <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
+                <h3 className="text-xs font-medium text-gray-400 mb-2 uppercase">Hero Section</h3>
+                <h4 className="text-xl font-bold mb-1">{generatedContent.hero.companyName}</h4>
+                <p className="text-blue-400 text-sm mb-2">{generatedContent.hero.tagline}</p>
+                <p className="text-gray-400 text-xs leading-relaxed">{generatedContent.hero.description}</p>
               </div>
 
               {/* Services */}
-              <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
-                <h3 className="text-sm font-medium text-gray-400 mb-3">SERVICES ({generatedContent.services.length})</h3>
-                <div className="space-y-3">
+              <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
+                <h3 className="text-xs font-medium text-gray-400 mb-2 uppercase">Services ({generatedContent.services.length})</h3>
+                <div className="space-y-2">
                   {generatedContent.services.slice(0, 3).map((service, index) => (
-                    <div key={index} className="border-l-2 border-blue-500 pl-3">
-                      <p className="font-medium">{service.title}</p>
-                      <p className="text-sm text-gray-400">{service.description}</p>
+                    <div key={index} className="border-l-2 border-blue-500 pl-2">
+                      <p className="font-medium text-sm">{service.title}</p>
+                      <p className="text-xs text-gray-400 line-clamp-1">{service.description}</p>
                     </div>
                   ))}
                   {generatedContent.services.length > 3 && (
-                    <p className="text-sm text-gray-500">+{generatedContent.services.length - 3} more services...</p>
+                    <p className="text-xs text-gray-500 italic">+{generatedContent.services.length - 3} more services...</p>
                   )}
                 </div>
               </div>
 
               {/* Stats - Editable */}
-              <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
-                <h3 className="text-sm font-medium text-gray-400 mb-3">STATISTICS (Editable)</h3>
-                <div className="space-y-4">
-                  {stats.map((stat, index) => (
-                    <div key={index} className="grid grid-cols-2 gap-3">
-                      <input
-                        type="text"
-                        value={stat.value}
-                        onChange={(e) => {
-                          const newStats = [...stats];
-                          newStats[index].value = e.target.value;
-                          setStats(newStats);
-                        }}
-                        placeholder="Value"
-                        className="px-3 py-2 bg-gray-800 border border-gray-700 rounded font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      <input
-                        type="text"
-                        value={stat.label}
-                        onChange={(e) => {
-                          const newStats = [...stats];
-                          newStats[index].label = e.target.value;
-                          setStats(newStats);
-                        }}
-                        placeholder="Label"
-                        className="px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  ))}
+              {stats.length > 0 && (
+                <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
+                  <h3 className="text-xs font-medium text-gray-400 mb-2 uppercase">Statistics (Editable)</h3>
+                  <div className="space-y-2">
+                    {stats.map((stat, index) => (
+                      <div key={index} className="grid grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          value={stat.value}
+                          onChange={(e) => {
+                            const newStats = [...stats];
+                            newStats[index].value = e.target.value;
+                            setStats(newStats);
+                          }}
+                          placeholder="Value"
+                          className="px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <input
+                          type="text"
+                          value={stat.label}
+                          onChange={(e) => {
+                            const newStats = [...stats];
+                            newStats[index].label = e.target.value;
+                            setStats(newStats);
+                          }}
+                          placeholder="Label"
+                          className="px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 

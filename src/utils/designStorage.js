@@ -2,61 +2,163 @@
 
 const DESIGN_STORAGE_KEY = 'progressit_design_settings';
 
-// Цветовые схемы
+// Цветовые схемы с градиентами
 export const COLOR_SCHEMES = {
   default: {
-    name: 'Default Dark',
-    primary: '#3b82f6', // blue-500
-    secondary: '#8b5cf6', // purple-500
+    name: 'Midnight Blue',
+    primary: '#3b82f6',
+    secondary: '#8b5cf6',
     background: '#000000',
     surface: '#1a1a1a',
     text: '#ffffff',
-    accent: '#06b6d4', // cyan-500
+    accent: '#06b6d4',
+    gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    gradientFrom: '#3b82f6',
+    gradientTo: '#8b5cf6',
+    category: 'Professional'
   },
   purple: {
     name: 'Purple Dream',
-    primary: '#8b5cf6', // purple-500
-    secondary: '#ec4899', // pink-500
+    primary: '#8b5cf6',
+    secondary: '#ec4899',
     background: '#0a0014',
     surface: '#1a0f2e',
     text: '#ffffff',
-    accent: '#a855f7', // purple-400
+    accent: '#a855f7',
+    gradient: 'linear-gradient(135deg, #667eea 0%, #f093fb 100%)',
+    gradientFrom: '#8b5cf6',
+    gradientTo: '#ec4899',
+    category: 'Creative'
   },
   green: {
-    name: 'Tech Green',
-    primary: '#10b981', // green-500
-    secondary: '#06b6d4', // cyan-500
+    name: 'Emerald Forest',
+    primary: '#10b981',
+    secondary: '#06b6d4',
     background: '#001a0f',
     surface: '#0a2f1f',
     text: '#ffffff',
-    accent: '#34d399', // green-400
+    accent: '#34d399',
+    gradient: 'linear-gradient(135deg, #0ba360 0%, #3cba92 100%)',
+    gradientFrom: '#10b981',
+    gradientTo: '#06b6d4',
+    category: 'Natural'
   },
   orange: {
-    name: 'Sunset Orange',
-    primary: '#f97316', // orange-500
-    secondary: '#eab308', // yellow-500
+    name: 'Sunset Glow',
+    primary: '#f97316',
+    secondary: '#eab308',
     background: '#1a0a00',
     surface: '#2f1a0a',
     text: '#ffffff',
-    accent: '#fb923c', // orange-400
+    accent: '#fb923c',
+    gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+    gradientFrom: '#f97316',
+    gradientTo: '#eab308',
+    category: 'Energetic'
   },
   cyan: {
-    name: 'Ocean Blue',
-    primary: '#06b6d4', // cyan-500
-    secondary: '#3b82f6', // blue-500
+    name: 'Ocean Wave',
+    primary: '#06b6d4',
+    secondary: '#3b82f6',
     background: '#001a1f',
     surface: '#0a2f3f',
     text: '#ffffff',
-    accent: '#22d3ee', // cyan-400
+    accent: '#22d3ee',
+    gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+    gradientFrom: '#06b6d4',
+    gradientTo: '#3b82f6',
+    category: 'Cool'
   },
   red: {
-    name: 'Red Hot',
-    primary: '#ef4444', // red-500
-    secondary: '#f97316', // orange-500
+    name: 'Fire Blaze',
+    primary: '#ef4444',
+    secondary: '#f97316',
     background: '#1a0000',
     surface: '#2f0a0a',
     text: '#ffffff',
-    accent: '#f87171', // red-400
+    accent: '#f87171',
+    gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+    gradientFrom: '#ef4444',
+    gradientTo: '#f97316',
+    category: 'Bold'
+  },
+  neon: {
+    name: 'Neon Nights',
+    primary: '#a855f7',
+    secondary: '#ec4899',
+    background: '#0a0014',
+    surface: '#1a0f2e',
+    text: '#ffffff',
+    accent: '#f0abfc',
+    gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+    gradientFrom: '#a855f7',
+    gradientTo: '#ec4899',
+    category: 'Vibrant'
+  },
+  aurora: {
+    name: 'Northern Aurora',
+    primary: '#06b6d4',
+    secondary: '#a855f7',
+    background: '#000814',
+    surface: '#001d3d',
+    text: '#ffffff',
+    accent: '#22d3ee',
+    gradient: 'linear-gradient(135deg, #2af598 0%, #009efd 100%)',
+    gradientFrom: '#06b6d4',
+    gradientTo: '#a855f7',
+    category: 'Modern'
+  },
+  monochrome: {
+    name: 'Pure Monochrome',
+    primary: '#ffffff',
+    secondary: '#9ca3af',
+    background: '#000000',
+    surface: '#1a1a1a',
+    text: '#ffffff',
+    accent: '#d1d5db',
+    gradient: 'linear-gradient(135deg, #434343 0%, #000000 100%)',
+    gradientFrom: '#ffffff',
+    gradientTo: '#9ca3af',
+    category: 'Minimal'
+  },
+  mint: {
+    name: 'Fresh Mint',
+    primary: '#10b981',
+    secondary: '#34d399',
+    background: '#001a0f',
+    surface: '#0a2f1f',
+    text: '#ffffff',
+    accent: '#6ee7b7',
+    gradient: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+    gradientFrom: '#10b981',
+    gradientTo: '#34d399',
+    category: 'Fresh'
+  },
+  cosmic: {
+    name: 'Cosmic Purple',
+    primary: '#7c3aed',
+    secondary: '#2dd4bf',
+    background: '#0f0a1e',
+    surface: '#1e1433',
+    text: '#ffffff',
+    accent: '#a78bfa',
+    gradient: 'linear-gradient(135deg, #2e1065 0%, #7c3aed 50%, #2dd4bf 100%)',
+    gradientFrom: '#7c3aed',
+    gradientTo: '#2dd4bf',
+    category: 'Futuristic'
+  },
+  rose: {
+    name: 'Rose Gold',
+    primary: '#f43f5e',
+    secondary: '#fb7185',
+    background: '#1a0008',
+    surface: '#2f0a14',
+    text: '#ffffff',
+    accent: '#fda4af',
+    gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+    gradientFrom: '#f43f5e',
+    gradientTo: '#fb7185',
+    category: 'Elegant'
   }
 };
 

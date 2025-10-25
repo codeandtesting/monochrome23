@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ExternalLink, Edit, Lightbulb, Pencil, Plus, ChevronDown, Check, Globe } from 'lucide-react';
 import { getChatsBySite, getChatPreview, getTimeAgo } from '../../utils/chatStorage';
 import { getActiveSite, getAllSites, setActiveSite, getActiveSiteId } from '../../utils/sitesStorage';
+import OnboardingChecklist from '../../components/OnboardingChecklist';
+import CountUp from 'react-countup';
 
 export default function DashboardHome() {
   const [stats, setStats] = useState({ total: 0, conversations: 0, leads: 0, bookings: 0 });
@@ -114,30 +116,33 @@ export default function DashboardHome() {
 
           {/* Sites Dropdown */}
           {showSiteSelector && totalSites > 1 && (
-            <div className="absolute top-full left-0 mt-2 w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl z-50 overflow-hidden">
+            <div className="absolute top-full left-0 mt-2 w-80 bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-lg shadow-2xl z-50 overflow-hidden backdrop-blur-sm animate-fadeIn">
               <div className="max-h-64 overflow-y-auto">
-                {allSites.map(site => (
+                {allSites.map((site, index) => (
                   <div
                     key={site.id}
                     onClick={() => handleSelectSite(site.id)}
-                    className={`flex items-center gap-3 px-4 py-3 hover:bg-gray-700 cursor-pointer transition-colors ${
-                      site.id === activeSite?.id ? 'bg-gray-700' : ''
+                    className={`flex items-center gap-3 px-4 py-3 hover:bg-gradient-to-r hover:from-gray-700 hover:to-gray-600 cursor-pointer transition-all group animate-fadeInUp ${
+                      site.id === activeSite?.id ? 'bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-l-2 border-blue-500' : ''
                     }`}
+                    style={{ animationDelay: `${index * 0.05}s` }}
                   >
-                    <div className={`w-8 h-8 rounded flex items-center justify-center flex-shrink-0 ${
+                    <div className={`w-8 h-8 rounded flex items-center justify-center flex-shrink-0 transition-all group-hover:scale-110 ${
                       site.id === activeSite?.id
-                        ? 'bg-gradient-to-br from-blue-500 to-purple-500'
-                        : 'bg-gray-700'
+                        ? 'bg-gradient-to-br from-blue-500 to-purple-500 shadow-lg shadow-blue-500/50'
+                        : 'bg-gray-700 group-hover:bg-gray-600'
                     }`}>
                       {site.id === activeSite?.id ? (
                         <Check size={18} className="text-white" />
                       ) : (
-                        <Globe size={18} className="text-gray-400" />
+                        <Globe size={18} className="text-gray-400 group-hover:text-white transition-colors" />
                       )}
                     </div>
-                    
+
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white truncate">
+                      <p className={`text-sm font-medium truncate transition-colors ${
+                        site.id === activeSite?.id ? 'text-blue-400' : 'text-white group-hover:text-blue-400'
+                      }`}>
                         {site.name}
                       </p>
                       <p className="text-xs text-gray-400">
@@ -150,67 +155,81 @@ export default function DashboardHome() {
             </div>
           )}
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <Link
             to="/onboarding/ai-wizard/step1"
-            className="px-4 py-2 border-2 border-green-500 border-opacity-30 text-green-400 rounded-lg hover:bg-green-500 hover:bg-opacity-10 transition-colors flex items-center gap-2"
+            className="group px-5 py-2.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all flex items-center gap-2 hover:scale-105 shadow-lg hover:shadow-green-500/50"
           >
-            <Plus size={18} />
+            <Plus size={18} className="group-hover:rotate-90 transition-transform" />
             New Site
           </Link>
           <Link
             to={activeSite?.url || '/'}
             target="_blank"
-            className="px-4 py-2 border-2 border-gray-700 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-2"
+            className="group px-5 py-2.5 border-2 border-blue-500/30 text-blue-400 rounded-lg hover:bg-blue-500/10 hover:border-blue-500/50 transition-all flex items-center gap-2 hover:scale-105"
           >
-            <ExternalLink size={18} />
+            <ExternalLink size={18} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             View Site
           </Link>
           <Link
             to="/dashboard/quick-edit"
-            className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
+            className="group px-5 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all flex items-center gap-2 hover:scale-105 shadow-lg hover:shadow-purple-500/50"
           >
-            <Pencil size={18} />
+            <Pencil size={18} className="group-hover:-rotate-12 transition-transform" />
             Edit Site
           </Link>
         </div>
       </div>
 
+      {/* Onboarding Checklist */}
+      <OnboardingChecklist />
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
-          <p className="text-sm text-gray-400 mb-1">Всего чатов</p>
-          <p className="text-3xl font-bold">{stats.total}</p>
+        <div className="bg-gradient-to-br from-blue-500/5 to-cyan-500/5 border border-blue-500/20 rounded-lg p-5 hover:border-blue-500/40 transition-all hover:shadow-lg hover:shadow-blue-500/10">
+          <p className="text-xs text-gray-500 mb-2 uppercase tracking-wide">Всего чатов</p>
+          <p className="text-2xl font-semibold text-blue-400">
+            <CountUp end={stats.total} duration={2} />
+          </p>
         </div>
-        
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
-          <p className="text-sm text-gray-400 mb-1">Запросы AI</p>
-          <p className="text-3xl font-bold">{stats.conversations}</p>
-          <p className="text-xs text-gray-500 mt-1">разговоры</p>
+
+        <div className="bg-gradient-to-br from-purple-500/5 to-pink-500/5 border border-purple-500/20 rounded-lg p-5 hover:border-purple-500/40 transition-all hover:shadow-lg hover:shadow-purple-500/10">
+          <p className="text-xs text-gray-500 mb-2 uppercase tracking-wide">Запросы AI</p>
+          <p className="text-2xl font-semibold text-purple-400">
+            <CountUp end={stats.conversations} duration={2} />
+          </p>
+          <p className="text-xs text-gray-500 mt-1.5">разговоры</p>
         </div>
-        
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
-          <p className="text-sm text-gray-400 mb-1">Лиды</p>
-          <p className="text-3xl font-bold">{stats.leads}</p>
-          <p className="text-xs text-gray-500 mt-1">+{stats.bookings} букингов</p>
+
+        <div className="bg-gradient-to-br from-green-500/5 to-emerald-500/5 border border-green-500/20 rounded-lg p-5 hover:border-green-500/40 transition-all hover:shadow-lg hover:shadow-green-500/10">
+          <p className="text-xs text-gray-500 mb-2 uppercase tracking-wide">Лиды</p>
+          <p className="text-2xl font-semibold text-green-400">
+            <CountUp end={stats.leads} duration={2} />
+          </p>
+          <p className="text-xs text-gray-500 mt-1.5">
+            +<CountUp end={stats.bookings} duration={2} /> букингов
+          </p>
         </div>
       </div>
 
       {/* AI Suggestions */}
-      <div className="bg-blue-500 bg-opacity-10 border border-blue-500 border-opacity-30 rounded-lg p-4">
-        <div className="flex justify-between items-start">
+      <div className="relative bg-gradient-to-r from-blue-500/5 to-purple-500/5 border border-blue-500/20 rounded-lg p-6 overflow-hidden group hover:border-blue-500/40 transition-all">
+        <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl group-hover:bg-blue-500/10 transition-all"></div>
+        <div className="relative flex justify-between items-start">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <Lightbulb className="text-blue-400" size={20} />
-              <h3 className="font-semibold">AI Suggestions</h3>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-9 h-9 bg-gradient-to-br from-blue-500/20 to-purple-600/20 rounded-lg flex items-center justify-center border border-blue-500/30">
+                <Lightbulb className="text-blue-400" size={18} />
+              </div>
+              <h3 className="font-medium text-base">AI Suggestions</h3>
             </div>
-            <p className="text-sm text-gray-300">
+            <p className="text-sm text-gray-400 leading-relaxed">
               Добавьте больше фото в портфолио для увеличения конверсии
             </p>
           </div>
           <Link
             to="/dashboard/portfolio"
-            className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium ml-4"
+            className="px-4 py-2 bg-blue-500/10 text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-500/20 hover:border-blue-500/50 transition-all text-sm font-medium ml-4"
           >
             View
           </Link>
@@ -218,14 +237,15 @@ export default function DashboardHome() {
       </div>
 
       {/* Recent Requests */}
-      <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="font-semibold">Последние запросы</h3>
-          <Link 
-            to="/dashboard/requests" 
-            className="text-sm text-blue-400 hover:text-blue-300"
+      <div className="relative bg-gradient-to-br from-gray-900/50 to-gray-900/30 border border-gray-800 rounded-lg p-6 hover:border-gray-700 transition-all overflow-hidden">
+        <div className="flex justify-between items-center mb-5">
+          <h3 className="font-medium text-base">Последние запросы</h3>
+          <Link
+            to="/dashboard/requests"
+            className="text-xs text-gray-400 hover:text-blue-400 flex items-center gap-1 transition-colors"
           >
-            Все →
+            Все
+            <span>→</span>
           </Link>
         </div>
         <div className="space-y-3">
@@ -234,17 +254,22 @@ export default function DashboardHome() {
               Пока нет запросов. Чаты с главной страницы появятся здесь.
             </p>
           ) : (
-            recentRequests.map((request) => (
-              <div 
+            recentRequests.map((request, index) => (
+              <div
                 key={request.id}
                 onClick={() => navigate(`/dashboard/requests/${request.id}`)}
-                className="flex justify-between items-center pb-3 last:pb-0 border-b border-gray-800 last:border-0 hover:bg-gray-800 hover:mx-[-1rem] hover:px-4 hover:py-2 rounded transition-all cursor-pointer"
+                className="flex justify-between items-center pb-3 last:pb-0 border-b border-gray-800/50 last:border-0 hover:bg-gray-800/30 hover:mx-[-0.5rem] hover:px-2 hover:py-1.5 rounded transition-all cursor-pointer group/item"
               >
-                <div>
-                  <p className="text-sm font-medium">{request.name}</p>
-                  <p className="text-xs text-gray-500">{request.message}</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-full bg-gray-800 flex items-center justify-center border border-gray-700 group-hover/item:border-blue-500/50 transition-colors">
+                    <span className="text-xs font-medium text-gray-400 group-hover/item:text-blue-400">{request.name.charAt(0).toUpperCase()}</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-normal group-hover/item:text-white transition-colors">{request.name}</p>
+                    <p className="text-xs text-gray-500">{request.message}</p>
+                  </div>
                 </div>
-                <span className="text-xs text-gray-400">{request.time}</span>
+                <span className="text-xs text-gray-500">{request.time}</span>
               </div>
             ))
           )}

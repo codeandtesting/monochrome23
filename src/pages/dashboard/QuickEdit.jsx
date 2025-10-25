@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Save, ExternalLink, RefreshCw, Sparkles, Palette, Monitor, Eye, X } from 'lucide-react';
+import { Save, ExternalLink, RefreshCw, Sparkles, Palette, Monitor, Eye, X, Zap, BarChart } from 'lucide-react';
 import { getActiveSite, updateSite } from '../../utils/sitesStorage';
 import { getDesignSettings, saveDesignSettings, COLOR_SCHEMES, LANDING_TYPES, applyColorScheme } from '../../utils/designStorage';
+import { getSEOData, saveSEOData, generateSEOFromSite, calculateSEOScore } from '../../utils/seoStorage';
 import ServicesManager from '../../components/dashboard/ServicesManager';
 import Portfolio from './Portfolio';
 import AISuggestions from '../../components/dashboard/AISuggestions';
+import { HelpTooltip } from '../../components/Tooltip';
+import GroupedTabs from '../../components/dashboard/GroupedTabs';
 
 export default function QuickEdit() {
   const [activeSection, setActiveSection] = useState('hero');
@@ -15,6 +18,18 @@ export default function QuickEdit() {
   const [designSettings, setDesignSettings] = useState(getDesignSettings());
   const [previewKey, setPreviewKey] = useState(0);
   const [pendingAISave, setPendingAISave] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [seoData, setSeoData] = useState(null);
+  const [seoScore, setSeoScore] = useState(null);
+
+  // Check if first login
+  useEffect(() => {
+    const isFirstLogin = localStorage.getItem('progressit_first_login');
+    if (isFirstLogin === 'true') {
+      setShowWelcome(true);
+      localStorage.removeItem('progressit_first_login');
+    }
+  }, []);
 
   // Загрузить данные при монтировании
   useEffect(() => {
@@ -49,12 +64,25 @@ export default function QuickEdit() {
     if (site) {
       setCurrentSite(site);
       setSiteData(site.data);
-      
+
       // Загрузить настройки дизайна из сайта
       if (site.design) {
         setDesignSettings(site.design);
         applyColorScheme(site.design.colorScheme || 'default');
       }
+
+      // Загрузить или создать SEO данные
+      let seo = getSEOData(site.id);
+      if (!seo) {
+        // Автоматически генерируем SEO при первой загрузке
+        seo = generateSEOFromSite(site.data);
+        saveSEOData(site.id, seo);
+      }
+      setSeoData(seo);
+
+      // Рассчитать SEO Score
+      const score = calculateSEOScore(seo, site.data);
+      setSeoScore(score);
     }
   };
 
@@ -163,6 +191,36 @@ export default function QuickEdit() {
       ...prev,
       social: { ...prev.social, [field]: value }
     }));
+  };
+
+  // SEO обновления
+  const updateSEO = (field, value) => {
+    const updatedSEO = { ...seoData, [field]: value };
+    setSeoData(updatedSEO);
+
+    // Сохранить в localStorage
+    if (currentSite) {
+      saveSEOData(currentSite.id, updatedSEO);
+      // Пересчитать score
+      const score = calculateSEOScore(updatedSEO, siteData);
+      setSeoScore(score);
+    }
+  };
+
+  const generateAISEO = () => {
+    if (!currentSite || !siteData) return;
+
+    const generatedSEO = generateSEOFromSite(siteData);
+    setSeoData(generatedSEO);
+    saveSEOData(currentSite.id, generatedSEO);
+
+    // Пересчитать score
+    const score = calculateSEOScore(generatedSEO, siteData);
+    setSeoScore(score);
+
+    // Показать уведомление
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
   };
 
   // Обработка AI предложений
@@ -432,42 +490,86 @@ export default function QuickEdit() {
       <div className="flex-1 p-6 overflow-y-auto bg-black">
         <div className="max-w-3xl">
           {/* Header */}
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold mb-2">Quick Edit Mode</h1>
-            <p className="text-gray-400 text-sm">
-              Редактируйте контент вашего сайта в реальном времени
+          <div className="mb-5">
+            <h1 className="text-xl font-semibold mb-1">Quick Edit</h1>
+            <p className="text-gray-500 text-xs">
+              Редактируйте контент в реальном времени
             </p>
           </div>
 
+          {/* Welcome Banner for First-Time Users */}
+          {showWelcome && (
+            <div className="mb-4 p-4 bg-gradient-to-r from-blue-500/5 to-purple-500/5 border border-blue-500/20 rounded-lg relative">
+              <button
+                onClick={() => setShowWelcome(false)}
+                className="absolute top-2 right-2 text-gray-500 hover:text-gray-400 transition-colors"
+              >
+                <X size={16} />
+              </button>
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center border border-blue-500/30">
+                  <Sparkles size={14} className="text-blue-400" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium mb-1.5">Welcome to Quick Edit!</h3>
+                  <p className="text-gray-400 text-xs leading-relaxed mb-2">
+                    Customize your site - edit text, change colors, manage services. All changes appear in real-time.
+                  </p>
+                  <p className="text-blue-400 text-xs">
+                    Use the tabs below to navigate
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Hero Section */}
           {activeSection === 'hero' && (
-            <div className="space-y-6">
+            <div className="space-y-5">
               {/* Main Hero - всегда показываем */}
-              <div className="space-y-4">
-                <h2 className="text-xl font-semibold mb-4">Main Hero / Title</h2>
+              <div className="space-y-3">
+                <h2 className="text-sm font-medium text-gray-400 mb-3">Main Hero</h2>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Название компании</label>
+                  <label className="block text-xs font-medium mb-1.5 text-gray-500">
+                    Название компании
+                    <HelpTooltip
+                      content="This is the main name that appears at the top of your website. Keep it short and memorable."
+                      position="right"
+                    />
+                  </label>
                   <input
                     type="text"
                     value={siteData.hero.companyName}
                     onChange={(e) => updateHero('companyName', e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-800 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Слоган</label>
+                  <label className="block text-xs font-medium mb-1.5 text-gray-500">
+                    Слоган
+                    <HelpTooltip
+                      content="A catchy tagline that describes what you do. Aim for 5-10 words that capture your value."
+                      position="right"
+                    />
+                  </label>
                   <input
                     type="text"
                     value={siteData.hero.tagline}
                     onChange={(e) => updateHero('tagline', e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-800 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Описание</label>
+                  <label className="block text-sm font-medium mb-2">
+                    Описание
+                    <HelpTooltip
+                      content="A brief description of your business. Explain what you do and why customers should choose you. 2-3 sentences work best."
+                      position="right"
+                    />
+                  </label>
                   <textarea
                     value={siteData.hero.description}
                     onChange={(e) => updateHero('description', e.target.value)}
@@ -638,6 +740,10 @@ export default function QuickEdit() {
                 <div className="flex items-center gap-2 mb-4">
                   <Monitor size={18} className="text-blue-400" />
                   <h4 className="text-sm font-semibold">Тип лендинга</h4>
+                  <HelpTooltip
+                    content="Choose between two layout styles: Layout 1 (traditional chat interface) or Layout 2 (split-screen with content carousel)."
+                    position="right"
+                  />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {Object.entries(LANDING_TYPES).map(([key, landing]) => (
@@ -662,30 +768,61 @@ export default function QuickEdit() {
                 <div className="flex items-center gap-2 mb-4">
                   <Palette size={18} className="text-purple-400" />
                   <h4 className="text-sm font-semibold">Цветовая палитра</h4>
+                  <HelpTooltip
+                    content="Select a color scheme for your website. Each theme includes a beautiful gradient background and coordinated colors."
+                    position="right"
+                  />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {Object.entries(COLOR_SCHEMES).map(([key, scheme]) => (
                     <button
                       key={key}
                       onClick={() => handleColorSchemeChange(key)}
-                      className={`p-4 rounded-lg border text-left transition-all ${
+                      className={`group relative overflow-hidden rounded-xl border-2 transition-all duration-300 ${
                         designSettings.colorScheme === key
-                          ? 'border-purple-500 ring-2 ring-purple-500/30'
-                          : 'border-gray-700 hover:border-gray-600'
+                          ? 'border-white ring-4 ring-white/20 scale-105 shadow-2xl'
+                          : 'border-gray-700 hover:border-gray-500 hover:scale-105 shadow-lg'
                       }`}
-                      style={{ backgroundColor: scheme.background }}
                     >
-                      <div className="flex items-center justify-between mb-3">
-                        <p className="text-sm font-medium" style={{ color: scheme.text }}>{scheme.name}</p>
-                        {designSettings.colorScheme === key && (
-                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: scheme.primary }} />
-                        )}
+                      {/* Gradient Background */}
+                      <div
+                        className="absolute inset-0 opacity-80 group-hover:opacity-100 transition-opacity"
+                        style={{ background: scheme.gradient }}
+                      />
+
+                      {/* Content */}
+                      <div className="relative p-4 backdrop-blur-sm">
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <p className="text-sm font-bold text-white drop-shadow-lg">{scheme.name}</p>
+                            <p className="text-xs text-white/80 font-medium">{scheme.category}</p>
+                          </div>
+                          {designSettings.colorScheme === key && (
+                            <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center shadow-lg">
+                              <div className="w-2 h-2 rounded-full bg-black" />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Color Swatches */}
+                        <div className="flex gap-1.5">
+                          <span
+                            className="w-8 h-8 rounded-lg shadow-md border border-white/20"
+                            style={{ backgroundColor: scheme.primary }}
+                          />
+                          <span
+                            className="w-8 h-8 rounded-lg shadow-md border border-white/20"
+                            style={{ backgroundColor: scheme.secondary }}
+                          />
+                          <span
+                            className="w-8 h-8 rounded-lg shadow-md border border-white/20"
+                            style={{ backgroundColor: scheme.accent }}
+                          />
+                        </div>
                       </div>
-                      <div className="flex gap-2">
-                        <span className="w-6 h-6 rounded-md" style={{ backgroundColor: scheme.primary }} />
-                        <span className="w-6 h-6 rounded-md" style={{ backgroundColor: scheme.secondary }} />
-                        <span className="w-6 h-6 rounded-md" style={{ backgroundColor: scheme.accent }} />
-                      </div>
+
+                      {/* Hover Glow Effect */}
+                      <div className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity bg-white" />
                     </button>
                   ))}
                 </div>
@@ -830,7 +967,13 @@ export default function QuickEdit() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">📞 Телефон</label>
+                <label className="block text-sm font-medium mb-2">
+                  📞 Телефон
+                  <HelpTooltip
+                    content="Your business phone number. Visitors can click to call you directly from the website."
+                    position="right"
+                  />
+                </label>
                 <input
                   type="tel"
                   value={siteData.contacts.phone}
@@ -840,7 +983,13 @@ export default function QuickEdit() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">📧 Email</label>
+                <label className="block text-sm font-medium mb-2">
+                  📧 Email
+                  <HelpTooltip
+                    content="Your business email address. Visitors can click to send you an email."
+                    position="right"
+                  />
+                </label>
                 <input
                   type="email"
                   value={siteData.contacts.email}
@@ -1114,69 +1263,315 @@ export default function QuickEdit() {
             </div>
           )}
 
+          {/* SEO - Meta Tags */}
+          {activeSection === 'seo-meta' && seoData && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold">Meta Теги</h2>
+                  <p className="text-sm text-gray-400 mt-1">Оптимизация для поисковых систем</p>
+                </div>
+                <button
+                  onClick={generateAISEO}
+                  className="px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 transition-all flex items-center gap-2 font-medium"
+                >
+                  <Zap size={16} />
+                  Генерировать AI
+                </button>
+              </div>
+
+              {/* SEO Score */}
+              {seoScore && (
+                <div className="bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-orange-500/30 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <BarChart size={20} className="text-orange-400" />
+                      <h3 className="font-semibold">SEO Score</h3>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-3xl font-bold text-orange-400">{seoScore.score}</div>
+                      <div className="text-gray-400">/100</div>
+                    </div>
+                  </div>
+                  <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-orange-500 to-red-500 transition-all duration-500"
+                      style={{ width: `${seoScore.score}%` }}
+                    />
+                  </div>
+                  <p className="text-sm text-gray-400 mt-2">Оценка: {seoScore.grade}</p>
+
+                  {seoScore.issues.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-orange-500/20">
+                      <p className="text-xs font-semibold text-orange-400 mb-1">Проблемы:</p>
+                      <ul className="text-xs text-gray-400 space-y-1">
+                        {seoScore.issues.map((issue, i) => (
+                          <li key={i}>• {issue}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Page Title
+                  <HelpTooltip content="Заголовок страницы в поисковой выдаче. Оптимально: 30-60 символов" position="right" />
+                </label>
+                <input
+                  type="text"
+                  value={seoData.title || ''}
+                  onChange={(e) => updateSEO('title', e.target.value)}
+                  placeholder="Название компании - Слоган"
+                  className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  maxLength={60}
+                />
+                <p className="text-xs text-gray-500 mt-1">{seoData.title?.length || 0} / 60 символов</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Meta Description
+                  <HelpTooltip content="Описание страницы в поисковой выдаче. Оптимально: 120-160 символов" position="right" />
+                </label>
+                <textarea
+                  value={seoData.description || ''}
+                  onChange={(e) => updateSEO('description', e.target.value)}
+                  placeholder="Краткое описание вашего бизнеса..."
+                  rows={3}
+                  className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
+                  maxLength={160}
+                />
+                <p className="text-xs text-gray-500 mt-1">{seoData.description?.length || 0} / 160 символов</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Keywords
+                  <HelpTooltip content="Ключевые слова через запятую. Добавляются автоматически из ваших услуг" position="right" />
+                </label>
+                <input
+                  type="text"
+                  value={seoData.keywords || ''}
+                  onChange={(e) => updateSEO('keywords', e.target.value)}
+                  placeholder="услуга 1, услуга 2, услуга 3"
+                  className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Author
+                </label>
+                <input
+                  type="text"
+                  value={seoData.author || ''}
+                  onChange={(e) => updateSEO('author', e.target.value)}
+                  placeholder="Название компании"
+                  className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* SEO - Content */}
+          {activeSection === 'seo-content' && seoData && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold">SEO Контент</h2>
+                  <p className="text-sm text-gray-400 mt-1">Структурированные данные и настройки</p>
+                </div>
+                <span className="px-3 py-1 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold rounded">AI</span>
+              </div>
+
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+                <p className="text-sm text-blue-400">
+                  💡 Schema.org данные генерируются автоматически на основе вашей контактной информации и услуг
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Canonical URL
+                  <HelpTooltip content="Основной URL вашего сайта для поисковиков" position="right" />
+                </label>
+                <input
+                  type="url"
+                  value={seoData.canonicalUrl || ''}
+                  onChange={(e) => updateSEO('canonicalUrl', e.target.value)}
+                  placeholder="https://yoursite.com"
+                  className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Robots
+                  <HelpTooltip content="Правила индексации для поисковых роботов" position="right" />
+                </label>
+                <select
+                  value={seoData.robots || 'index, follow'}
+                  onChange={(e) => updateSEO('robots', e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
+                  <option value="index, follow">Index, Follow (рекомендуется)</option>
+                  <option value="noindex, follow">NoIndex, Follow</option>
+                  <option value="index, nofollow">Index, NoFollow</option>
+                  <option value="noindex, nofollow">NoIndex, NoFollow</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Language
+                </label>
+                <select
+                  value={seoData.language || 'ru'}
+                  onChange={(e) => updateSEO('language', e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
+                  <option value="ru">Русский (ru)</option>
+                  <option value="en">English (en)</option>
+                  <option value="uk">Українська (uk)</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* SEO - Open Graph */}
+          {activeSection === 'seo-social' && seoData && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-xl font-semibold">Open Graph</h2>
+                <p className="text-sm text-gray-400 mt-1">Как ваш сайт выглядит в соцсетях</p>
+              </div>
+
+              <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
+                <p className="text-sm text-purple-400">
+                  ✨ Open Graph теги делают ваши ссылки красивыми в Facebook, Twitter, Telegram и других соцсетях
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  OG Title
+                  <HelpTooltip content="Заголовок при репосте в соцсети" position="right" />
+                </label>
+                <input
+                  type="text"
+                  value={seoData.ogTitle || ''}
+                  onChange={(e) => updateSEO('ogTitle', e.target.value)}
+                  placeholder="Название вашей компании"
+                  className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  OG Description
+                  <HelpTooltip content="Описание при репосте в соцсети" position="right" />
+                </label>
+                <textarea
+                  value={seoData.ogDescription || ''}
+                  onChange={(e) => updateSEO('ogDescription', e.target.value)}
+                  placeholder="Краткое описание..."
+                  rows={3}
+                  className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
+                  maxLength={200}
+                />
+                <p className="text-xs text-gray-500 mt-1">{seoData.ogDescription?.length || 0} / 200 символов</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  OG Image URL
+                  <HelpTooltip content="Картинка при репосте в соцсети (1200x630px)" position="right" />
+                </label>
+                <input
+                  type="url"
+                  value={seoData.ogImage || ''}
+                  onChange={(e) => updateSEO('ogImage', e.target.value)}
+                  placeholder="https://example.com/image.jpg"
+                  className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+                <p className="text-xs text-gray-500 mt-1">Рекомендуемый размер: 1200x630px</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  OG Type
+                </label>
+                <select
+                  value={seoData.ogType || 'website'}
+                  onChange={(e) => updateSEO('ogType', e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
+                  <option value="website">Website</option>
+                  <option value="article">Article</option>
+                  <option value="business.business">Business</option>
+                </select>
+              </div>
+            </div>
+          )}
+
           {/* Save Button */}
-          <div className="mt-8 pt-6 border-t border-gray-800 sticky bottom-0 bg-black pb-6">
-            <div className="flex gap-3">
+          <div className="mt-6 pt-4 border-t border-gray-800/50 sticky bottom-0 bg-black pb-4">
+            <div className="flex gap-2">
               <button
                 onClick={handleSave}
-                className={`flex-1 py-3 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${
-                  saved 
-                    ? 'bg-green-500 text-white' 
+                className={`flex-1 py-2 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-1.5 ${
+                  saved
+                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
                     : 'bg-blue-500 text-white hover:bg-blue-600'
                 }`}
               >
-                <Save size={18} />
-                {saved ? '✓ Сохранено!' : 'Сохранить изменения'}
+                <Save size={14} />
+                {saved ? 'Saved' : 'Save'}
               </button>
-              
+
               <button
                 onClick={() => setShowAI(true)}
-                className="px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg hover:from-purple-600 hover:to-blue-600 transition-all flex items-center gap-2 font-medium"
+                className="px-3 py-2 bg-purple-500/10 text-purple-400 border border-purple-500/30 rounded-lg hover:bg-purple-500/20 transition-all flex items-center gap-1.5 text-sm font-medium"
               >
-                <Sparkles size={18} />
-                Доработать с AI
+                <Sparkles size={14} />
+                AI
               </button>
 
               <button
                 onClick={handleReset}
-                className="px-6 py-3 border border-gray-700 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-2"
+                className="px-3 py-2 border border-gray-700 rounded-lg hover:bg-gray-800/50 transition-colors flex items-center gap-1.5 text-sm"
+                title="Reset"
               >
-                <RefreshCw size={18} />
-                Сбросить
+                <RefreshCw size={14} />
               </button>
 
               <a
                 href="/2"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-6 py-3 border border-gray-700 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-2"
+                className="px-3 py-2 border border-gray-700 rounded-lg hover:bg-gray-800/50 transition-colors flex items-center gap-1.5 text-sm"
+                title="Preview"
               >
-                <ExternalLink size={18} />
-                Просмотр
+                <ExternalLink size={14} />
               </a>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Right Sidebar - Sections List */}
-      <div className="w-80 bg-gray-900 border-l border-gray-800 p-6 overflow-y-auto">
-        <h3 className="font-semibold mb-4 text-lg">All Editable Sections</h3>
-        <div className="space-y-2">
-          {sections.map((section) => (
-            <button
-              key={section.id}
-              onClick={() => setActiveSection(section.id)}
-              className={`w-full text-left px-4 py-3 rounded-lg transition-all ${
-                activeSection === section.id
-                  ? 'bg-blue-500 bg-opacity-10 border-2 border-blue-400 text-blue-400'
-                  : 'bg-gray-800 border border-gray-700 hover:bg-gray-750 text-gray-300'
-              }`}
-            >
-              {section.label}
-            </button>
-          ))}
+      {/* Right Sidebar - Grouped Sections */}
+      <div className="w-72 bg-gray-900 border-l border-gray-800 p-4 overflow-y-auto">
+        <div className="mb-4">
+          <h3 className="font-medium text-sm mb-0.5">Settings</h3>
+          <p className="text-xs text-gray-600">Select section</p>
         </div>
+
+        <GroupedTabs
+          activeSection={activeSection}
+          onTabChange={setActiveSection}
+        />
       </div>
 
       {/* AI Suggestions Modal */}

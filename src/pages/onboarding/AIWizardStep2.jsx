@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, Check } from 'lucide-react';
 import { chatWithDeepSeek } from '../../api/deepseek';
+import ProgressSteps from '../../components/ProgressSteps';
 
 export default function AIWizardStep2() {
   const navigate = useNavigate();
@@ -117,6 +118,13 @@ Make the content professional, engaging, and tailored to the business. Use appro
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
+        {/* Progress Steps */}
+        <ProgressSteps
+          currentStep={2}
+          totalSteps={4}
+          steps={['Basic Info', 'Services', 'Details', 'Preview']}
+        />
+
         {/* Header */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full mb-4 animate-pulse">

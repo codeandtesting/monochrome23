@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getActiveSite } from '../utils/sitesStorage';
 import { applyColorScheme } from '../utils/designStorage';
 import ChatPage from './ChatPage';
@@ -221,6 +222,18 @@ export default function ClientSitePage({ siteData: propSiteData, forceMobile = f
     return () => clearInterval(interval);
   }, [contentVariants.length]);
 
+  const nextSlide = () => {
+    setCurrentContentIndex((prev) => (prev + 1) % contentVariants.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentContentIndex((prev) => (prev - 1 + contentVariants.length) % contentVariants.length);
+  };
+
+  const goToSlide = (index) => {
+    setCurrentContentIndex(index);
+  };
+
   const desktop = forceMobile ? false : isDesktop;
 
   return (
@@ -229,7 +242,7 @@ export default function ClientSitePage({ siteData: propSiteData, forceMobile = f
         
         {/* LEFT - Preview (Desktop only) */}
         {desktop && (
-          <div className="p-12 flex items-center justify-center bg-black relative overflow-hidden">
+          <div className="p-12 flex items-center justify-center bg-black relative overflow-hidden group">
             <div className="relative w-full flex items-center justify-center min-h-[400px]">
               {contentVariants.map((variant, index) => (
                 <div key={variant.type} className={`absolute transition-all duration-500 ${index === currentContentIndex ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
@@ -237,9 +250,20 @@ export default function ClientSitePage({ siteData: propSiteData, forceMobile = f
                 </div>
               ))}
             </div>
-            <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2">
+
+            {/* Dots Indicator */}
+            <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2 bg-gray-900/50 backdrop-blur-sm px-4 py-2 rounded-full border border-gray-800">
               {contentVariants.map((_, index) => (
-                <button key={index} onClick={() => setCurrentContentIndex(index)} className={`w-1.5 h-1.5 rounded-full transition-all ${index === currentContentIndex ? 'indicator-active w-6' : 'indicator-inactive'}`} />
+                <button
+                  key={index}
+                  onClick={() => goToSlide(index)}
+                  className={`transition-all rounded-full ${
+                    index === currentContentIndex
+                      ? 'w-8 h-2 bg-theme-primary'
+                      : 'w-2 h-2 bg-gray-600 hover:bg-gray-500'
+                  }`}
+                  aria-label={`Go to slide ${index + 1}`}
+                />
               ))}
             </div>
           </div>
@@ -250,18 +274,39 @@ export default function ClientSitePage({ siteData: propSiteData, forceMobile = f
           
           {/* MOBILE: Preview overlay */}
           {!desktop && mobileStage === 'preview' && (
-            <div className="absolute inset-0 z-30 bg-black flex items-center justify-center p-6 cursor-pointer" onClick={() => setMobileStage('chat')} onTouchStart={(e) => (touchStartXRef.current = e.touches[0].clientX)} onTouchEnd={(e) => { const dx = e.changedTouches[0].clientX - touchStartXRef.current; if (dx < -50) setMobileStage('chat'); }}>
-              <div className="w-full max-w-md">
+            <div className="absolute inset-0 z-30 bg-black flex flex-col items-center justify-center p-6" onClick={() => setMobileStage('chat')} onTouchStart={(e) => (touchStartXRef.current = e.touches[0].clientX)} onTouchEnd={(e) => { const dx = e.changedTouches[0].clientX - touchStartXRef.current; if (dx < -50) setMobileStage('chat'); }}>
+
+              {/* Content Carousel */}
+              <div className="w-full max-w-md flex-1 flex items-center justify-center relative">
                 {contentVariants.map((variant, index) => (
-                  <div key={`mob-${variant.type}`} className={`transition-opacity duration-500 ${index === currentContentIndex ? 'opacity-100' : 'opacity-0 absolute inset-0 pointer-events-none'}`}>
+                  <div key={`mob-${variant.type}`} className={`transition-all duration-500 ${index === currentContentIndex ? 'opacity-100 scale-100' : 'opacity-0 scale-95 absolute inset-0 pointer-events-none'}`}>
                     {variant.content}
                   </div>
                 ))}
               </div>
-              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
-                {contentVariants.map((_, index) => (
-                  <div key={`dot-${index}`} className={`w-1.5 h-1.5 rounded-full transition-all ${index === currentContentIndex ? 'bg-white w-4' : 'bg-gray-600'}`} />
-                ))}
+
+              {/* Enhanced Dots Indicator */}
+              <div className="w-full flex flex-col items-center gap-4 pb-4">
+                <div className="flex gap-2 bg-gray-900/70 backdrop-blur-md px-6 py-3 rounded-full border border-gray-700">
+                  {contentVariants.map((_, index) => (
+                    <button
+                      key={`dot-${index}`}
+                      onClick={(e) => { e.stopPropagation(); goToSlide(index); }}
+                      className={`transition-all rounded-full ${
+                        index === currentContentIndex
+                          ? 'w-8 h-2.5 bg-theme-primary shadow-lg shadow-theme-primary/50'
+                          : 'w-2.5 h-2.5 bg-gray-600'
+                      }`}
+                      aria-label={`Go to slide ${index + 1}`}
+                    />
+                  ))}
+                </div>
+
+                {/* Swipe Hint */}
+                <div className="flex items-center gap-2 text-gray-400 text-xs animate-pulse">
+                  <span>Swipe left to chat</span>
+                  <ChevronRight size={14} />
+                </div>
               </div>
             </div>
           )}
@@ -273,8 +318,9 @@ export default function ClientSitePage({ siteData: propSiteData, forceMobile = f
 
           {/* Mobile: back button */}
           {!desktop && mobileStage === 'chat' && (
-            <button onClick={() => setMobileStage('preview')} className="fixed bottom-24 right-4 px-3 py-1.5 text-xs bg-gray-800 border border-gray-700 rounded-full text-gray-300 z-50">
-              ← Back
+            <button onClick={() => setMobileStage('preview')} className="fixed top-4 left-4 px-4 py-2 text-sm bg-gray-800/90 backdrop-blur-sm border border-gray-700 rounded-full text-white z-50 flex items-center gap-2 hover:bg-gray-700 transition-all">
+              <ChevronLeft size={16} />
+              Back
             </button>
           )}
         </div>

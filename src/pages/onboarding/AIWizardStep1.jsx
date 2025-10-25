@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, ArrowRight, Globe, MapPin, Building2 } from 'lucide-react';
+import ProgressSteps from '../../components/ProgressSteps';
 
 export default function AIWizardStep1() {
   const navigate = useNavigate();
@@ -40,6 +41,13 @@ export default function AIWizardStep1() {
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
+        {/* Progress Steps */}
+        <ProgressSteps
+          currentStep={1}
+          totalSteps={4}
+          steps={['Basic Info', 'Services', 'Details', 'Preview']}
+        />
+
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-500 rounded-full mb-4">
@@ -47,7 +55,7 @@ export default function AIWizardStep1() {
           </div>
           <h1 className="text-4xl font-bold mb-2">AI Wizard</h1>
           <p className="text-gray-400">
-            Step 1 of 3 • AI will create content for you
+            Tell us about your business
           </p>
         </div>
 
