@@ -52,6 +52,45 @@ const getSectionPrompt = (sectionType) => {
 - Статистику подписчиков для доверия
 - Ссылки на кейсы в соц сетях
 
+ФОРМАТ ОТВЕТА (JSON):`,
+
+    'seo-meta': `Ты - SEO эксперт. Анализируй SEO META TAGS секцию.
+
+ТВОЯ ЗАДАЧА:
+Предложить улучшение для meta тегов, которое повысит позиции в поисковых системах и CTR.
+
+ЧТО МОЖНО ПРЕДЛОЖИТЬ:
+- Улучшить Title для большей кликабельности (добавить триггеры, цифры, эмодзи)
+- Оптимизировать Description для увеличения CTR
+- Добавить релевантные Keywords
+- Улучшить Author/Keywords для индексации
+
+ФОРМАТ ОТВЕТА (JSON):`,
+
+    'seo-content': `Ты - SEO эксперт по контент-маркетингу. Анализируй SEO CONTENT секцию.
+
+ТВОЯ ЗАДАЧА:
+Предложить SEO-оптимизированный контент, который увеличит органический трафик.
+
+ЧТО МОЖНО ПРЕДЛОЖИТЬ:
+- H1/H2 заголовки с ключевыми словами
+- Alt-тексты для изображений
+- Структурированные данные (Schema.org)
+- FAQ секцию с популярными вопросами
+
+ФОРМАТ ОТВЕТА (JSON):`,
+
+    stats: `Ты - эксперт по конверсионному маркетингу. Анализируй STATISTICS секцию.
+
+ТВОЯ ЗАДАЧА:
+Предложить статистику, которая увеличит доверие и конверсию.
+
+ЧТО МОЖНО ПРЕДЛОЖИТЬ:
+- Впечатляющие цифры достижений (проекты, клиенты, опыт)
+- Процент удовлетворенности клиентов
+- Время работы / Скорость ответа
+- Экономия/результаты для клиентов
+
 ФОРМАТ ОТВЕТА (JSON):`
   };
 
@@ -67,10 +106,10 @@ const AI_SUGGESTION_PROMPT_BASE = `
 5. Отвечай ТОЛЬКО в формате JSON:
 
 {
-  "type": "hero_stat" | "hero_tagline" | "service" | "contact_method" | "social_platform" | "benefit",
+  "type": "hero_stat" | "hero_tagline" | "service" | "contact_method" | "social_platform" | "seo_meta" | "seo_keyword" | "statistic",
   "suggestion": "Краткое описание предложения",
   "data": { ... },
-  "reason": "Почему это увеличит конверсию"
+  "reason": "Почему это увеличит конверсию/SEO"
 }
 
 ПРИМЕРЫ ФОРМАТА (адаптируй под текущую компанию):
@@ -96,6 +135,29 @@ Services секция:
     "category": "Категория"
   },
   "reason": "Почему эта услуга важна для данного бизнеса"
+}
+
+SEO Meta секция:
+{
+  "type": "seo_meta",
+  "suggestion": "Оптимизировать Title для увеличения CTR",
+  "data": {
+    "field": "title",
+    "newValue": "Улучшенный Title с триггерами и цифрами"
+  },
+  "reason": "Увеличивает кликабельность в поисковой выдаче на 15-25%"
+}
+
+Statistics секция:
+{
+  "type": "statistic",
+  "suggestion": "Добавить впечатляющую статистику",
+  "data": {
+    "value": "150+",
+    "label": "Успешных проектов",
+    "icon": "📊"
+  },
+  "reason": "Конкретные цифры создают доверие и демонстрируют опыт"
 }
 
 Contacts/Social секция:
@@ -144,6 +206,12 @@ export default function AISuggestions({ sectionType, currentData, onApplySuggest
         sectionData = currentData.contacts;
       } else if (sectionType === 'social') {
         sectionData = currentData.social;
+      } else if (sectionType === 'seo-meta') {
+        sectionData = currentData.seo || { title: '', description: '', keywords: '', author: '' };
+      } else if (sectionType === 'seo-content') {
+        sectionData = { seo: currentData.seo, hero: currentData.hero };
+      } else if (sectionType === 'stats') {
+        sectionData = currentData.stats || { enabled: false, items: [] };
       } else {
         sectionData = currentData;
       }
@@ -215,7 +283,16 @@ Respond ONLY with valid JSON. Do NOT use generic examples.`;
             <div>
               <h2 className="text-xl font-bold">AI Suggestions</h2>
               <p className="text-sm text-gray-400">
-                <span className="text-white font-medium">{companyName}</span> • Улучшаем: <span className="text-purple-400 font-medium capitalize">{sectionType === 'hero' ? 'Main Hero' : sectionType === 'services' ? 'Services' : sectionType === 'contacts' ? 'Contacts' : 'Social Networks'}</span>
+                <span className="text-white font-medium">{companyName}</span> • Улучшаем: <span className="text-purple-400 font-medium capitalize">
+                  {sectionType === 'hero' ? 'Main Hero' :
+                   sectionType === 'services' ? 'Services' :
+                   sectionType === 'contacts' ? 'Contacts' :
+                   sectionType === 'social' ? 'Social Networks' :
+                   sectionType === 'seo-meta' ? 'SEO Meta Tags' :
+                   sectionType === 'seo-content' ? 'SEO Content' :
+                   sectionType === 'stats' ? 'Statistics' :
+                   sectionType}
+                </span>
               </p>
             </div>
           </div>
@@ -280,7 +357,7 @@ Respond ONLY with valid JSON. Do NOT use generic examples.`;
                   <p className="text-xs text-gray-500 uppercase mb-2 font-medium">Предварительный просмотр:</p>
                   <div className="text-sm">
                     {/* Hero Section Previews */}
-                    {(suggestion.type === 'hero_stat' || suggestion.type === 'hero_tagline' || suggestion.type === 'statistic') && (
+                    {(suggestion.type === 'hero_stat' || suggestion.type === 'hero_tagline') && (
                       <div className="space-y-2">
                         {suggestion.data.field === 'description' && (
                           <div className="text-gray-300">
@@ -300,6 +377,29 @@ Respond ONLY with valid JSON. Do NOT use generic examples.`;
                             <p className="text-xl font-bold">{suggestion.data.newValue}</p>
                           </div>
                         )}
+                      </div>
+                    )}
+
+                    {/* Statistic Preview */}
+                    {suggestion.type === 'statistic' && (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3 bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-lg p-3">
+                          <span className="text-2xl">{suggestion.data.icon || '📊'}</span>
+                          <div>
+                            <p className="text-2xl font-bold text-white">{suggestion.data.value}</p>
+                            <p className="text-xs text-gray-400">{suggestion.data.label}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* SEO Meta Preview */}
+                    {suggestion.type === 'seo_meta' && (
+                      <div className="space-y-2">
+                        <p className="text-xs text-gray-500 mb-1 capitalize">{suggestion.data.field}:</p>
+                        <div className="bg-gray-800/50 border border-gray-700 rounded p-2">
+                          <p className="text-white text-sm font-medium">{suggestion.data.newValue}</p>
+                        </div>
                       </div>
                     )}
 

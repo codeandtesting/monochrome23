@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, X, Briefcase } from 'lucide-react';
 import { SERVICES_CATEGORIES } from '../../data/servicesData';
+import ProgressSteps from '../../components/ProgressSteps';
 
 export default function ManualStep2() {
   const navigate = useNavigate();
@@ -62,6 +63,13 @@ export default function ManualStep2() {
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
       <div className="w-full max-w-3xl space-y-8">
+        {/* Progress Steps */}
+        <ProgressSteps
+          currentStep={2}
+          totalSteps={4}
+          steps={['Basic Info', 'Services', 'Details', 'Preview']}
+        />
+
         {/* Header */}
         <div className="text-center">
           <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-blue-500 rounded-full mx-auto mb-4 flex items-center justify-center">

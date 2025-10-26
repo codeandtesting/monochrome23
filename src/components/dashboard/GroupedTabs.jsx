@@ -14,7 +14,8 @@ import {
   Sparkles,
   Search,
   FileText,
-  Tag
+  Tag,
+  Chrome
 } from 'lucide-react';
 
 const TAB_GROUPS = [
@@ -27,7 +28,8 @@ const TAB_GROUPS = [
     tabs: [
       { id: 'hero', label: 'Hero / Главная', icon: Pencil, badge: null },
       { id: 'services', label: 'Услуги', icon: Briefcase, badge: null },
-      { id: 'visual', label: 'Дизайн и цвета', icon: Palette, badge: null }
+      { id: 'visual', label: 'Дизайн и цвета', icon: Palette, badge: null },
+      { id: 'favicon', label: 'Favicon', icon: Chrome, badge: null }
     ]
   },
   {

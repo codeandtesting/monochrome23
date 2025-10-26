@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Save, ExternalLink, RefreshCw, Sparkles, Palette, Monitor, Eye, X, Zap, BarChart } from 'lucide-react';
+import { Save, ExternalLink, RefreshCw, Sparkles, Palette, Monitor, Eye, X, Zap, BarChart, Upload, Chrome } from 'lucide-react';
 import { getActiveSite, updateSite } from '../../utils/sitesStorage';
 import { getDesignSettings, saveDesignSettings, COLOR_SCHEMES, LANDING_TYPES, applyColorScheme } from '../../utils/designStorage';
 import { getSEOData, saveSEOData, generateSEOFromSite, calculateSEOScore } from '../../utils/seoStorage';
+import { generateLetterFavicon, updateFavicon, saveFaviconToStorage, loadFaviconFromStorage } from '../../utils/faviconGenerator';
 import ServicesManager from '../../components/dashboard/ServicesManager';
 import Portfolio from './Portfolio';
 import AISuggestions from '../../components/dashboard/AISuggestions';
@@ -21,6 +22,7 @@ export default function QuickEdit() {
   const [showWelcome, setShowWelcome] = useState(false);
   const [seoData, setSeoData] = useState(null);
   const [seoScore, setSeoScore] = useState(null);
+  const [faviconPreview, setFaviconPreview] = useState(null);
 
   // Check if first login
   useEffect(() => {
@@ -83,6 +85,23 @@ export default function QuickEdit() {
       // Рассчитать SEO Score
       const score = calculateSEOScore(seo, site.data);
       setSeoScore(score);
+
+      // Загрузить или создать favicon
+      let favicon = loadFaviconFromStorage(site.id);
+      if (!favicon && site.data?.hero?.companyName) {
+        // Автоматически генерируем favicon при первой загрузке
+        const colorScheme = site.design?.colorScheme || 'default';
+        favicon = generateLetterFavicon(
+          site.data.hero.companyName,
+          COLOR_SCHEMES[colorScheme]?.gradientFrom || '#3b82f6',
+          COLOR_SCHEMES[colorScheme]?.gradientTo || '#8b5cf6'
+        );
+        saveFaviconToStorage(site.id, favicon);
+      }
+      if (favicon) {
+        setFaviconPreview(favicon);
+        updateFavicon(favicon);
+      }
     }
   };
 
@@ -264,12 +283,32 @@ export default function QuickEdit() {
         }
         break;
 
-      // Старые типы (обратная совместимость)
+      // SEO Meta секция
+      case 'seo_meta':
+        if (suggestion.data.field && suggestion.data.newValue) {
+          const newSeoData = { ...seoData };
+          newSeoData[suggestion.data.field] = suggestion.data.newValue;
+          setSeoData(newSeoData);
+
+          // Пересчитать SEO Score
+          const score = calculateSEOScore(newSeoData, siteData);
+          setSeoScore(score);
+        }
+        break;
+
+      // Statistics секция
       case 'statistic':
-        if (suggestion.data.field === 'description') {
-          updateHero('description', suggestion.data.newValue);
-        } else if (suggestion.data.field === 'tagline') {
-          updateHero('tagline', suggestion.data.newValue);
+        if (suggestion.data.value && suggestion.data.label) {
+          const newStats = { ...siteData.stats };
+          if (!newStats.items) newStats.items = [];
+
+          newStats.items.push({
+            value: suggestion.data.value,
+            label: suggestion.data.label,
+            icon: suggestion.data.icon || '📊'
+          });
+
+          setSiteData(prev => ({ ...prev, stats: newStats }));
         }
         break;
 
@@ -563,7 +602,7 @@ export default function QuickEdit() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">
+                  <label className="block text-xs font-medium mb-1.5 text-gray-500">
                     Описание
                     <HelpTooltip
                       content="A brief description of your business. Explain what you do and why customers should choose you. 2-3 sentences work best."
@@ -574,9 +613,9 @@ export default function QuickEdit() {
                     value={siteData.hero.description}
                     onChange={(e) => updateHero('description', e.target.value)}
                     rows={4}
-                    className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                    className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-800 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 resize-none"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-600 mt-1">
                     {siteData.hero.description.length} / 500 символов
                   </p>
                 </div>
@@ -585,16 +624,16 @@ export default function QuickEdit() {
               {/* Content Showcase Settings - только для Layout 2 */}
               {isLayout2 && (
                 <>
-                  <div className="border-t border-gray-800 pt-6">
-                    <h2 className="text-xl font-semibold mb-4">Content Showcase Settings</h2>
-                    <p className="text-sm text-gray-400 mb-6">
+                  <div className="border-t border-gray-800/50 pt-5">
+                    <h2 className="text-sm font-medium text-gray-400 mb-3">Content Showcase Settings</h2>
+                    <p className="text-xs text-gray-500 mb-4">
                       Choose which sections to display in the left panel carousel (Layout 2)
                     </p>
-                    
-                    <div className="space-y-4 bg-gray-900 p-5 rounded-lg border border-gray-800">
-                      <h3 className="font-semibold mb-3">Enabled Sections</h3>
-                      
-                      <label className="flex items-center gap-3 cursor-pointer p-3 rounded hover:bg-gray-800 transition-colors">
+
+                    <div className="space-y-3 bg-gray-900/50 p-4 rounded-lg border border-gray-800">
+                      <h3 className="text-sm font-medium mb-2 text-gray-400">Enabled Sections</h3>
+
+                      <label className="flex items-center gap-3 cursor-pointer p-2.5 rounded hover:bg-gray-800/50 transition-colors">
                         <input
                           type="checkbox"
                           checked={siteData.showcase?.showAbout !== false}
@@ -602,15 +641,15 @@ export default function QuickEdit() {
                             ...prev,
                             showcase: { ...prev.showcase, showAbout: e.target.checked }
                           }))}
-                          className="w-5 h-5"
+                          className="w-4 h-4"
                         />
                         <div>
-                          <p className="font-medium">About / Hero</p>
-                          <p className="text-xs text-gray-500">Company name, tagline, description</p>
+                          <p className="text-sm font-medium">About / Hero</p>
+                          <p className="text-xs text-gray-600">Company name, tagline, description</p>
                         </div>
                       </label>
                       
-                      <label className="flex items-center gap-3 cursor-pointer p-3 rounded hover:bg-gray-800 transition-colors">
+                      <label className="flex items-center gap-3 cursor-pointer p-2.5 rounded hover:bg-gray-800/50 transition-colors">
                         <input
                           type="checkbox"
                           checked={siteData.showcase?.showPortfolio !== false}
@@ -618,15 +657,15 @@ export default function QuickEdit() {
                             ...prev,
                             showcase: { ...prev.showcase, showPortfolio: e.target.checked }
                           }))}
-                          className="w-5 h-5"
+                          className="w-4 h-4"
                         />
                         <div>
-                          <p className="font-medium">Portfolio</p>
-                          <p className="text-xs text-gray-500">Portfolio gallery showcase</p>
+                          <p className="text-sm font-medium">Portfolio</p>
+                          <p className="text-xs text-gray-600">Portfolio gallery showcase</p>
                         </div>
                       </label>
-                      
-                      <label className="flex items-center gap-3 cursor-pointer p-3 rounded hover:bg-gray-800 transition-colors">
+
+                      <label className="flex items-center gap-3 cursor-pointer p-2.5 rounded hover:bg-gray-800/50 transition-colors">
                         <input
                           type="checkbox"
                           checked={siteData.showcase?.showServices !== false}
@@ -634,15 +673,15 @@ export default function QuickEdit() {
                             ...prev,
                             showcase: { ...prev.showcase, showServices: e.target.checked }
                           }))}
-                          className="w-5 h-5"
+                          className="w-4 h-4"
                         />
                         <div>
-                          <p className="font-medium">Services</p>
-                          <p className="text-xs text-gray-500">List of your services</p>
+                          <p className="text-sm font-medium">Services</p>
+                          <p className="text-xs text-gray-600">List of your services</p>
                         </div>
                       </label>
-                      
-                      <label className="flex items-center gap-3 cursor-pointer p-3 rounded hover:bg-gray-800 transition-colors">
+
+                      <label className="flex items-center gap-3 cursor-pointer p-2.5 rounded hover:bg-gray-800/50 transition-colors">
                         <input
                           type="checkbox"
                           checked={siteData.showcase?.showStats !== false}
@@ -650,15 +689,15 @@ export default function QuickEdit() {
                             ...prev,
                             showcase: { ...prev.showcase, showStats: e.target.checked }
                           }))}
-                          className="w-5 h-5"
+                          className="w-4 h-4"
                         />
                         <div>
-                          <p className="font-medium">Statistics</p>
-                          <p className="text-xs text-gray-500">Achievements and numbers</p>
+                          <p className="text-sm font-medium">Statistics</p>
+                          <p className="text-xs text-gray-600">Achievements and numbers</p>
                         </div>
                       </label>
-                      
-                      <label className="flex items-center gap-3 cursor-pointer p-3 rounded hover:bg-gray-800 transition-colors">
+
+                      <label className="flex items-center gap-3 cursor-pointer p-2.5 rounded hover:bg-gray-800/50 transition-colors">
                         <input
                           type="checkbox"
                           checked={siteData.showcase?.showTestimonials !== false}
@@ -666,15 +705,15 @@ export default function QuickEdit() {
                             ...prev,
                             showcase: { ...prev.showcase, showTestimonials: e.target.checked }
                           }))}
-                          className="w-5 h-5"
+                          className="w-4 h-4"
                         />
                         <div>
-                          <p className="font-medium">Testimonials</p>
-                          <p className="text-xs text-gray-500">Client reviews and feedback</p>
+                          <p className="text-sm font-medium">Testimonials</p>
+                          <p className="text-xs text-gray-600">Client reviews and feedback</p>
                         </div>
                       </label>
-                      
-                      <label className="flex items-center gap-3 cursor-pointer p-3 rounded hover:bg-gray-800 transition-colors">
+
+                      <label className="flex items-center gap-3 cursor-pointer p-2.5 rounded hover:bg-gray-800/50 transition-colors">
                         <input
                           type="checkbox"
                           checked={siteData.showcase?.showContacts !== false}
@@ -682,17 +721,17 @@ export default function QuickEdit() {
                             ...prev,
                             showcase: { ...prev.showcase, showContacts: e.target.checked }
                           }))}
-                          className="w-5 h-5"
+                          className="w-4 h-4"
                         />
                         <div>
-                          <p className="font-medium">Contacts</p>
-                          <p className="text-xs text-gray-500">Contact information</p>
+                          <p className="text-sm font-medium">Contacts</p>
+                          <p className="text-xs text-gray-600">Contact information</p>
                         </div>
                       </label>
-                      
-                      <div className="bg-blue-500 bg-opacity-10 border border-blue-500 border-opacity-30 rounded-lg p-4 text-sm">
+
+                      <div className="bg-blue-500/5 border border-blue-500/20 rounded-lg p-3 text-xs">
                         <p className="text-blue-400 font-medium mb-1">💡 Tip</p>
-                        <p className="text-gray-300">
+                        <p className="text-gray-400">
                           These sections will cycle automatically in the left panel every 5 seconds. Enable only the sections you want to showcase.
                         </p>
                       </div>
@@ -705,8 +744,8 @@ export default function QuickEdit() {
 
           {/* Visual Design - inline controls */}
           {activeSection === 'visual' && (
-            <div className="space-y-6">
-              <h2 className="text-xl font-semibold">Visual Design</h2>
+            <div className="space-y-5">
+              <h2 className="text-sm font-medium text-gray-400 mb-3">Visual Design</h2>
 
               {/* Live preview link */}
               <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 flex items-center justify-between">
@@ -855,12 +894,119 @@ export default function QuickEdit() {
             </div>
           )}
 
+          {/* Favicon Section */}
+          {activeSection === 'favicon' && (
+            <div className="space-y-5">
+              <h2 className="text-sm font-medium text-gray-400 mb-3">Favicon Settings</h2>
+
+              {/* Info Banner */}
+              <div className="bg-blue-500/5 border border-blue-500/20 rounded-lg p-3">
+                <p className="text-xs text-blue-400 leading-relaxed">
+                  Your favicon appears in browser tabs. We automatically generate one from your company name, but you can upload a custom image.
+                </p>
+              </div>
+
+              {/* Current Favicon Preview */}
+              <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-4">
+                <label className="block text-xs font-medium mb-3 text-gray-500">Current Favicon</label>
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-lg border-2 border-gray-700 flex items-center justify-center bg-gray-800">
+                    {faviconPreview || loadFaviconFromStorage(currentSite?.id) ? (
+                      <img
+                        src={faviconPreview || loadFaviconFromStorage(currentSite?.id)}
+                        alt="Favicon"
+                        className="w-12 h-12 rounded"
+                      />
+                    ) : (
+                      <Chrome size={32} className="text-gray-600" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-300 mb-1">Auto-generated from company name</p>
+                    <p className="text-xs text-gray-500">Click "Generate" to create a new one</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Generate from Letter */}
+              <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-4">
+                <label className="block text-xs font-medium mb-2 text-gray-500">
+                  Generate from Company Name
+                  <HelpTooltip
+                    content="Creates a favicon with the first letter of your company name on a gradient background, similar to Gmail."
+                    position="right"
+                  />
+                </label>
+                <button
+                  onClick={() => {
+                    if (!currentSite || !siteData) return;
+                    const companyName = siteData.hero?.companyName || 'M';
+                    const colorScheme = designSettings.colorScheme || 'default';
+                    const faviconDataUrl = generateLetterFavicon(
+                      companyName,
+                      COLOR_SCHEMES[colorScheme]?.gradientFrom || '#3b82f6',
+                      COLOR_SCHEMES[colorScheme]?.gradientTo || '#8b5cf6'
+                    );
+                    setFaviconPreview(faviconDataUrl);
+                    saveFaviconToStorage(currentSite.id, faviconDataUrl);
+                    updateFavicon(faviconDataUrl);
+                    setSaved(true);
+                    setTimeout(() => setSaved(false), 1500);
+                  }}
+                  className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all text-sm font-medium flex items-center justify-center gap-2"
+                >
+                  <Sparkles size={14} />
+                  Generate Letter Favicon
+                </button>
+              </div>
+
+              {/* Upload Custom (Hardcoded for presentation) */}
+              <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-4">
+                <label className="block text-xs font-medium mb-2 text-gray-500">
+                  Upload Custom Image
+                  <HelpTooltip
+                    content="Upload your own favicon image. Recommended size: 32x32 or 64x64 pixels, PNG format."
+                    position="right"
+                  />
+                </label>
+                <label className="block border-2 border-dashed border-gray-700 rounded-lg p-6 text-center hover:border-gray-600 transition-colors cursor-pointer">
+                  <Upload size={32} className="mx-auto mb-2 text-gray-600" />
+                  <p className="text-sm text-gray-400 mb-1">Click to upload or drag and drop</p>
+                  <p className="text-xs text-gray-600">PNG, JPG or ICO (max. 1MB)</p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          const dataUrl = event.target.result;
+                          setFaviconPreview(dataUrl);
+                          saveFaviconToStorage(currentSite?.id, dataUrl);
+                          updateFavicon(dataUrl);
+                          setSaved(true);
+                          setTimeout(() => setSaved(false), 1500);
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                  <p className="text-xs text-yellow-500 mt-3">
+                    (Presentation only - upload saves to localStorage)
+                  </p>
+                </label>
+              </div>
+            </div>
+          )}
+
           {/* Services Section - NEW MANAGER */}
           {activeSection === 'services' && (
             <div>
-              <h2 className="text-xl font-semibold mb-4">Управление услугами</h2>
-              <div className="mb-4 bg-blue-500 bg-opacity-10 border border-blue-500 border-opacity-30 rounded-lg p-4">
-                <p className="text-sm text-blue-400">
+              <h2 className="text-sm font-medium text-gray-400 mb-3">Управление услугами</h2>
+              <div className="mb-4 bg-blue-500/5 border border-blue-500/20 rounded-lg p-3">
+                <p className="text-xs text-blue-400">
                   💡 Теперь вы можете управлять до 1000+ услуг с поиском, фильтрами и пагинацией.
                 </p>
               </div>
@@ -870,20 +1016,20 @@ export default function QuickEdit() {
 
           {/* Custom Domain Section */}
           {activeSection === 'domain' && (
-            <div className="space-y-6">
-              <h2 className="text-xl font-semibold">Custom Domain</h2>
+            <div className="space-y-5">
+              <h2 className="text-sm font-medium text-gray-400 mb-3">Custom Domain</h2>
 
-              <div className="bg-yellow-500 bg-opacity-10 border border-yellow-500 border-opacity-30 rounded-lg p-4">
-                <p className="text-sm text-yellow-400">
+              <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                <p className="text-xs text-yellow-400">
                   Подключите ваш собственный домен. Это демонстрационный интерфейс (hardcoded) для презентации, сохранение идёт в текущий активный сайт.
                 </p>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid md:grid-cols-2 gap-5">
                 {/* Domain input */}
-                <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 space-y-4">
+                <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-5 space-y-3">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Ваш домен</label>
+                    <label className="block text-xs font-medium mb-1.5 text-gray-500">Ваш домен</label>
                     <input
                       type="text"
                       value={currentSite?.customDomain || ''}
@@ -892,7 +1038,7 @@ export default function QuickEdit() {
                         updateSite(currentSite.id, { customDomain: e.target.value });
                       }}
                       placeholder="yourdomain.com"
-                      className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-800 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50"
                     />
                   </div>
 
@@ -943,9 +1089,9 @@ export default function QuickEdit() {
           {/* Portfolio Section - embedded existing manager */}
           {activeSection === 'portfolio' && (
             <div>
-              <h2 className="text-xl font-semibold mb-4">Портфолио</h2>
-              <div className="mb-4 bg-blue-500 bg-opacity-10 border border-blue-500 border-opacity-30 rounded-lg p-4">
-                <p className="text-sm text-blue-400">Управляйте фотографиями, видео, кейсами и внешними ссылками вашего сайта</p>
+              <h2 className="text-sm font-medium text-gray-400 mb-3">Портфолио</h2>
+              <div className="mb-4 bg-blue-500/5 border border-blue-500/20 rounded-lg p-3">
+                <p className="text-xs text-blue-400">Управляйте фотографиями, видео, кейсами и внешними ссылками вашего сайта</p>
               </div>
               <Portfolio />
             </div>
@@ -953,21 +1099,21 @@ export default function QuickEdit() {
 
           {/* Contacts Section */}
           {activeSection === 'contacts' && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold mb-4">Contacts Section</h2>
+            <div className="space-y-3">
+              <h2 className="text-sm font-medium text-gray-400 mb-3">Contacts Section</h2>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Заголовок</label>
+                <label className="block text-xs font-medium mb-1.5 text-gray-500">Заголовок</label>
                 <input
                   type="text"
                   value={siteData.contacts.heading}
                   onChange={(e) => updateContacts('heading', e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-800 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-xs font-medium mb-1.5 text-gray-500">
                   📞 Телефон
                   <HelpTooltip
                     content="Your business phone number. Visitors can click to call you directly from the website."
@@ -978,12 +1124,12 @@ export default function QuickEdit() {
                   type="tel"
                   value={siteData.contacts.phone}
                   onChange={(e) => updateContacts('phone', e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-800 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-xs font-medium mb-1.5 text-gray-500">
                   📧 Email
                   <HelpTooltip
                     content="Your business email address. Visitors can click to send you an email."
@@ -994,27 +1140,27 @@ export default function QuickEdit() {
                   type="email"
                   value={siteData.contacts.email}
                   onChange={(e) => updateContacts('email', e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-800 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">📍 Адрес</label>
+                <label className="block text-xs font-medium mb-1.5 text-gray-500">📍 Адрес</label>
                 <input
                   type="text"
                   value={siteData.contacts.address}
                   onChange={(e) => updateContacts('address', e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-800 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">🌐 Website</label>
+                <label className="block text-xs font-medium mb-1.5 text-gray-500">🌐 Website</label>
                 <input
                   type="url"
                   value={siteData.contacts.website}
                   onChange={(e) => updateContacts('website', e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-800 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50"
                 />
               </div>
             </div>
@@ -1022,9 +1168,9 @@ export default function QuickEdit() {
 
           {/* Statistics */}
           {activeSection === 'stats' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold">Statistics & Achievements</h2>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-medium text-gray-400">Statistics & Achievements</h2>
                 <button
                   onClick={() => {
                     const newStats = {...siteData.stats};
@@ -1053,13 +1199,13 @@ export default function QuickEdit() {
                 </label>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {siteData.stats?.items?.map((stat, index) => (
-                  <div key={index} className="p-4 bg-gray-900 border border-gray-800 rounded-lg">
+                  <div key={index} className="p-3 bg-gray-900/50 border border-gray-800 rounded-lg">
                     <div className="flex items-start gap-3">
                       <div className="flex-1 grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-sm font-medium mb-2">Value</label>
+                          <label className="block text-xs font-medium mb-1.5 text-gray-500">Value</label>
                           <input
                             type="text"
                             value={stat.value}
@@ -1069,11 +1215,11 @@ export default function QuickEdit() {
                               setSiteData(prev => ({ ...prev, stats: newStats }));
                             }}
                             placeholder="e.g. 500+"
-                            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-800 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium mb-2">Label</label>
+                          <label className="block text-xs font-medium mb-1.5 text-gray-500">Label</label>
                           <input
                             type="text"
                             value={stat.label}
@@ -1083,7 +1229,7 @@ export default function QuickEdit() {
                               setSiteData(prev => ({ ...prev, stats: newStats }));
                             }}
                             placeholder="e.g. Projects Completed"
-                            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-800 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50"
                           />
                         </div>
                       </div>
@@ -1113,9 +1259,9 @@ export default function QuickEdit() {
 
           {/* Testimonials */}
           {activeSection === 'testimonials' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold">Client Testimonials</h2>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-medium text-gray-400">Client Testimonials</h2>
                 <button
                   onClick={() => {
                     const newTestimonials = {...siteData.testimonials};
@@ -1150,14 +1296,14 @@ export default function QuickEdit() {
                 </label>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {siteData.testimonials?.items?.map((testimonial, index) => (
-                  <div key={testimonial.id} className="p-4 bg-gray-900 border border-gray-800 rounded-lg space-y-3">
+                  <div key={testimonial.id} className="p-3 bg-gray-900/50 border border-gray-800 rounded-lg space-y-2.5">
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 space-y-3">
+                      <div className="flex-1 space-y-2.5">
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-sm font-medium mb-2">Name</label>
+                            <label className="block text-xs font-medium mb-1.5 text-gray-500">Name</label>
                             <input
                               type="text"
                               value={testimonial.name}
@@ -1167,11 +1313,11 @@ export default function QuickEdit() {
                                 setSiteData(prev => ({ ...prev, testimonials: newTestimonials }));
                               }}
                               placeholder="e.g. John Doe"
-                              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-800 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium mb-2">Role / Company</label>
+                            <label className="block text-xs font-medium mb-1.5 text-gray-500">Role / Company</label>
                             <input
                               type="text"
                               value={testimonial.role}
@@ -1181,12 +1327,12 @@ export default function QuickEdit() {
                                 setSiteData(prev => ({ ...prev, testimonials: newTestimonials }));
                               }}
                               placeholder="e.g. CEO at Company"
-                              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-800 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50"
                             />
                           </div>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium mb-2">Testimonial Text</label>
+                          <label className="block text-xs font-medium mb-1.5 text-gray-500">Testimonial Text</label>
                           <textarea
                             value={testimonial.text}
                             onChange={(e) => {
@@ -1196,11 +1342,11 @@ export default function QuickEdit() {
                             }}
                             rows={3}
                             placeholder="Client's feedback..."
-                            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                            className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-800 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 resize-none"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium mb-2">Rating (1-5)</label>
+                          <label className="block text-xs font-medium mb-1.5 text-gray-500">Rating (1-5)</label>
                           <input
                             type="number"
                             min="1"
@@ -1211,7 +1357,7 @@ export default function QuickEdit() {
                               newTestimonials.items[index].rating = parseInt(e.target.value);
                               setSiteData(prev => ({ ...prev, testimonials: newTestimonials }));
                             }}
-                            className="w-24 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-24 px-3 py-2 text-sm bg-gray-900/50 border border-gray-800 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50"
                           />
                         </div>
                       </div>
@@ -1241,13 +1387,13 @@ export default function QuickEdit() {
 
           {/* Social Networks */}
           {activeSection === 'social' && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold mb-4">Social Networks</h2>
+            <div className="space-y-3">
+              <h2 className="text-sm font-medium text-gray-400 mb-3">Social Networks</h2>
 
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {Object.entries(siteData.social).map(([platform, url]) => (
                   <div key={platform}>
-                    <label className="block text-sm font-medium mb-2 capitalize">
+                    <label className="block text-xs font-medium mb-1.5 text-gray-500 capitalize">
                       {platform === 'twitter' ? 'X (Twitter)' : platform}
                     </label>
                     <input
@@ -1255,7 +1401,7 @@ export default function QuickEdit() {
                       value={url}
                       onChange={(e) => updateSocial(platform, e.target.value)}
                       placeholder={`https://${platform}.com/...`}
-                      className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-800 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50"
                     />
                   </div>
                 ))}
@@ -1265,11 +1411,11 @@ export default function QuickEdit() {
 
           {/* SEO - Meta Tags */}
           {activeSection === 'seo-meta' && seoData && (
-            <div className="space-y-6">
+            <div className="space-y-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-semibold">Meta Теги</h2>
-                  <p className="text-sm text-gray-400 mt-1">Оптимизация для поисковых систем</p>
+                  <h2 className="text-sm font-medium text-gray-400">Meta Теги</h2>
+                  <p className="text-xs text-gray-500 mt-0.5">Оптимизация для поисковых систем</p>
                 </div>
                 <button
                   onClick={generateAISEO}
@@ -1315,7 +1461,7 @@ export default function QuickEdit() {
               )}
 
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-xs font-medium mb-1.5 text-gray-500">
                   Page Title
                   <HelpTooltip content="Заголовок страницы в поисковой выдаче. Оптимально: 30-60 символов" position="right" />
                 </label>
@@ -1324,14 +1470,14 @@ export default function QuickEdit() {
                   value={seoData.title || ''}
                   onChange={(e) => updateSEO('title', e.target.value)}
                   placeholder="Название компании - Слоган"
-                  className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-800 rounded-lg focus:outline-none focus:ring-1 focus:ring-orange-500/50 focus:border-orange-500/50"
                   maxLength={60}
                 />
-                <p className="text-xs text-gray-500 mt-1">{seoData.title?.length || 0} / 60 символов</p>
+                <p className="text-xs text-gray-600 mt-1">{seoData.title?.length || 0} / 60 символов</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-xs font-medium mb-1.5 text-gray-500">
                   Meta Description
                   <HelpTooltip content="Описание страницы в поисковой выдаче. Оптимально: 120-160 символов" position="right" />
                 </label>
@@ -1340,14 +1486,14 @@ export default function QuickEdit() {
                   onChange={(e) => updateSEO('description', e.target.value)}
                   placeholder="Краткое описание вашего бизнеса..."
                   rows={3}
-                  className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
+                  className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-800 rounded-lg focus:outline-none focus:ring-1 focus:ring-orange-500/50 focus:border-orange-500/50 resize-none"
                   maxLength={160}
                 />
-                <p className="text-xs text-gray-500 mt-1">{seoData.description?.length || 0} / 160 символов</p>
+                <p className="text-xs text-gray-600 mt-1">{seoData.description?.length || 0} / 160 символов</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-xs font-medium mb-1.5 text-gray-500">
                   Keywords
                   <HelpTooltip content="Ключевые слова через запятую. Добавляются автоматически из ваших услуг" position="right" />
                 </label>
@@ -1356,12 +1502,12 @@ export default function QuickEdit() {
                   value={seoData.keywords || ''}
                   onChange={(e) => updateSEO('keywords', e.target.value)}
                   placeholder="услуга 1, услуга 2, услуга 3"
-                  className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-800 rounded-lg focus:outline-none focus:ring-1 focus:ring-orange-500/50 focus:border-orange-500/50"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-xs font-medium mb-1.5 text-gray-500">
                   Author
                 </label>
                 <input
@@ -1369,7 +1515,7 @@ export default function QuickEdit() {
                   value={seoData.author || ''}
                   onChange={(e) => updateSEO('author', e.target.value)}
                   placeholder="Название компании"
-                  className="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-800 rounded-lg focus:outline-none focus:ring-1 focus:ring-orange-500/50 focus:border-orange-500/50"
                 />
               </div>
             </div>
@@ -1377,11 +1523,11 @@ export default function QuickEdit() {
 
           {/* SEO - Content */}
           {activeSection === 'seo-content' && seoData && (
-            <div className="space-y-6">
+            <div className="space-y-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-semibold">SEO Контент</h2>
-                  <p className="text-sm text-gray-400 mt-1">Структурированные данные и настройки</p>
+                  <h2 className="text-sm font-medium text-gray-400">SEO Контент</h2>
+                  <p className="text-xs text-gray-500 mt-0.5">Структурированные данные и настройки</p>
                 </div>
                 <span className="px-3 py-1 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold rounded">AI</span>
               </div>

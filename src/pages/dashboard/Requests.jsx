@@ -69,10 +69,11 @@ export default function Requests() {
     : requests.filter(req => req.type === activeTab);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold mb-2">Запросы клиентов</h1>
+        <h1 className="text-2xl font-semibold mb-1">Запросы клиентов</h1>
+        <p className="text-sm text-gray-500">Все обращения с ваших сайтов</p>
       </div>
 
       {/* Tabs */}
@@ -81,23 +82,26 @@ export default function Requests() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
               activeTab === tab.id
-                ? 'bg-gray-800 text-white'
-                : 'border border-gray-700 hover:bg-gray-800'
+                ? 'bg-gray-800 text-white shadow-sm'
+                : 'bg-gray-900/50 border border-gray-800 hover:bg-gray-800/50 text-gray-400'
             }`}
           >
-            {tab.label} ({tab.count})
+            {tab.label} <span className="text-xs opacity-60">({tab.count})</span>
           </button>
         ))}
       </div>
 
       {/* Requests List */}
-      <div className="space-y-3">
+      <div className="space-y-2.5">
         {filteredRequests.length === 0 ? (
-          <div className="text-center py-12 bg-gray-900 border border-gray-800 rounded-lg">
-            <p className="text-gray-400 mb-2">Нет запросов</p>
-            <p className="text-sm text-gray-500">
+          <div className="text-center py-16 bg-gray-900/30 border border-gray-800/50 rounded-lg">
+            <div className="w-12 h-12 rounded-full bg-gray-800/50 flex items-center justify-center mx-auto mb-3">
+              <Mail className="text-gray-600" size={20} />
+            </div>
+            <p className="text-gray-400 mb-1 text-sm font-medium">Нет запросов</p>
+            <p className="text-xs text-gray-600">
               Чаты с главной страницы появятся здесь автоматически
             </p>
           </div>
@@ -106,31 +110,31 @@ export default function Requests() {
             <div
               key={request.id}
               onClick={() => navigate(`/dashboard/requests/${request.id}`)}
-              className="bg-gray-900 border border-gray-800 rounded-lg p-4 hover:bg-gray-850 cursor-pointer transition-colors"
+              className="bg-gray-900/50 border border-gray-800 rounded-lg p-4 hover:bg-gray-800/50 hover:border-gray-700 cursor-pointer transition-all group"
             >
-              <div className="flex justify-between items-start mb-2">
+              <div className="flex justify-between items-start mb-2.5">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center text-sm font-medium">
+                  <div className="w-9 h-9 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full flex items-center justify-center text-sm font-medium border border-gray-700 group-hover:border-gray-600 transition-colors">
                     {request.name[0].toUpperCase()}
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="font-medium">{request.name}</p>
-                      <span className="text-xs text-gray-500">{request.source}</span>
+                      <p className="font-medium text-sm">{request.name}</p>
+                      <span className="text-xs text-gray-600">{request.source}</span>
                     </div>
-                    <p className="text-xs text-gray-500">{request.email}</p>
+                    <p className="text-xs text-gray-600">{request.email}</p>
                   </div>
                 </div>
-                <span className={`text-xs px-2 py-1 rounded ${
-                  request.status === 'Лид' ? 'bg-green-500 bg-opacity-20 text-green-400' :
-                  request.status === 'Букинг' ? 'bg-blue-500 bg-opacity-20 text-blue-400' :
-                  'bg-gray-700 text-gray-300'
+                <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${
+                  request.status === 'Лид' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
+                  request.status === 'Букинг' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                  'bg-gray-800 text-gray-400 border border-gray-700'
                 }`}>
                   {request.status}
                 </span>
               </div>
-              <p className="text-sm text-gray-400 mb-2">{request.preview}</p>
-              <div className="flex justify-between items-center text-xs text-gray-500">
+              <p className="text-sm text-gray-500 mb-2.5 line-clamp-2">{request.preview}</p>
+              <div className="flex justify-between items-center text-xs text-gray-600">
                 <span>{request.action}</span>
                 <span>{request.time}</span>
               </div>
