@@ -52,8 +52,7 @@ const TAB_GROUPS = [
     gradient: 'from-green-500 to-emerald-500',
     tabs: [
       { id: 'contacts', label: 'Контактная информация', icon: Phone, badge: null },
-      { id: 'social', label: 'Социальные сети', icon: Share2, badge: null },
-      { id: 'domain', label: 'Домен', icon: Globe, badge: 'Pro' }
+      { id: 'social', label: 'Социальные сети', icon: Share2, badge: null }
     ]
   },
   {
@@ -63,6 +62,7 @@ const TAB_GROUPS = [
     icon: Search,
     gradient: 'from-orange-500 to-red-500',
     tabs: [
+      { id: 'domain', label: 'Домен', icon: Globe, badge: 'Pro' },
       { id: 'seo-meta', label: 'Meta теги', icon: Tag, badge: null },
       { id: 'seo-content', label: 'SEO контент', icon: FileText, badge: 'AI' },
       { id: 'seo-social', label: 'Open Graph', icon: Share2, badge: null }

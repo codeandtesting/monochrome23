@@ -9,6 +9,8 @@ import Portfolio from './Portfolio';
 import AISuggestions from '../../components/dashboard/AISuggestions';
 import { HelpTooltip } from '../../components/Tooltip';
 import GroupedTabs from '../../components/dashboard/GroupedTabs';
+import WelcomeTour from '../../components/dashboard/WelcomeTour';
+import QuickStartChecklist from '../../components/dashboard/QuickStartChecklist';
 
 export default function QuickEdit() {
   const [activeSection, setActiveSection] = useState('hero');
@@ -19,16 +21,19 @@ export default function QuickEdit() {
   const [designSettings, setDesignSettings] = useState(getDesignSettings());
   const [previewKey, setPreviewKey] = useState(0);
   const [pendingAISave, setPendingAISave] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(false);
+  const [showWelcomeTour, setShowWelcomeTour] = useState(false);
   const [seoData, setSeoData] = useState(null);
   const [seoScore, setSeoScore] = useState(null);
   const [faviconPreview, setFaviconPreview] = useState(null);
+  const [faviconVariations, setFaviconVariations] = useState([]);
 
-  // Check if first login
+  // Check if first login and show welcome tour
   useEffect(() => {
     const isFirstLogin = localStorage.getItem('progressit_first_login');
-    if (isFirstLogin === 'true') {
-      setShowWelcome(true);
+    const tourCompleted = localStorage.getItem('progressit_tour_completed');
+
+    if (isFirstLogin === 'true' && !tourCompleted) {
+      setShowWelcomeTour(true);
       localStorage.removeItem('progressit_first_login');
     }
   }, []);
@@ -60,6 +65,24 @@ export default function QuickEdit() {
       setPendingAISave(false);
     }
   }, [pendingAISave, currentSite, siteData]);
+
+  // Автосохранение при изменении данных (с debounce)
+  useEffect(() => {
+    if (!currentSite || !siteData) return;
+
+    // Не сохраняем при первой загрузке
+    const isInitialLoad = !pendingAISave && saved === false;
+    if (isInitialLoad) return;
+
+    const debounceTimer = setTimeout(() => {
+      updateSite(currentSite.id, { data: siteData });
+      window.dispatchEvent(new Event('siteDataUpdated'));
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    }, 1000); // Сохраняем через 1 секунду после последнего изменения
+
+    return () => clearTimeout(debounceTimer);
+  }, [siteData]);
 
   const loadSiteData = () => {
     const site = getActiveSite();
@@ -324,6 +347,9 @@ export default function QuickEdit() {
 
     // Триггерим автосохранение через useEffect
     setPendingAISave(true);
+
+    // Закрываем модальное окно AI после применения
+    setShowAI(false);
   };
 
   // Обработчики дизайна
@@ -536,31 +562,13 @@ export default function QuickEdit() {
             </p>
           </div>
 
-          {/* Welcome Banner for First-Time Users */}
-          {showWelcome && (
-            <div className="mb-4 p-4 bg-gradient-to-r from-blue-500/5 to-purple-500/5 border border-blue-500/20 rounded-lg relative">
-              <button
-                onClick={() => setShowWelcome(false)}
-                className="absolute top-2 right-2 text-gray-500 hover:text-gray-400 transition-colors"
-              >
-                <X size={16} />
-              </button>
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center border border-blue-500/30">
-                  <Sparkles size={14} className="text-blue-400" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium mb-1.5">Welcome to Quick Edit!</h3>
-                  <p className="text-gray-400 text-xs leading-relaxed mb-2">
-                    Customize your site - edit text, change colors, manage services. All changes appear in real-time.
-                  </p>
-                  <p className="text-blue-400 text-xs">
-                    Use the tabs below to navigate
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Quick Start Checklist */}
+          <div className="mb-4">
+            <QuickStartChecklist
+              siteData={siteData}
+              onNavigate={(target) => setActiveSection(target)}
+            />
+          </div>
 
           {/* Hero Section */}
           {activeSection === 'hero' && (
@@ -617,6 +625,20 @@ export default function QuickEdit() {
                   />
                   <p className="text-xs text-gray-600 mt-1">
                     {siteData.hero.description.length} / 500 символов
+                  </p>
+                </div>
+
+                {/* AI Suggestions для текста */}
+                <div className="pt-2">
+                  <button
+                    onClick={() => setShowAI(true)}
+                    className="w-full px-4 py-2.5 bg-purple-500/10 text-purple-400 border border-purple-500/30 rounded-lg hover:bg-purple-500/20 transition-all flex items-center justify-center gap-2 text-sm font-medium"
+                  >
+                    <Sparkles size={16} />
+                    AI улучшить текст
+                  </button>
+                  <p className="text-xs text-gray-600 mt-1.5 text-center">
+                    AI предложит улучшения для названия, слогана и описания
                   </p>
                 </div>
               </div>
@@ -933,7 +955,7 @@ export default function QuickEdit() {
                 <label className="block text-xs font-medium mb-2 text-gray-500">
                   Generate from Company Name
                   <HelpTooltip
-                    content="Creates a favicon with the first letter of your company name on a gradient background, similar to Gmail."
+                    content="Creates multiple favicon variations with the first letter of your company name on different gradient backgrounds. Click to generate options."
                     position="right"
                   />
                 </label>
@@ -941,24 +963,95 @@ export default function QuickEdit() {
                   onClick={() => {
                     if (!currentSite || !siteData) return;
                     const companyName = siteData.hero?.companyName || 'M';
-                    const colorScheme = designSettings.colorScheme || 'default';
-                    const faviconDataUrl = generateLetterFavicon(
-                      companyName,
-                      COLOR_SCHEMES[colorScheme]?.gradientFrom || '#3b82f6',
-                      COLOR_SCHEMES[colorScheme]?.gradientTo || '#8b5cf6'
-                    );
-                    setFaviconPreview(faviconDataUrl);
-                    saveFaviconToStorage(currentSite.id, faviconDataUrl);
-                    updateFavicon(faviconDataUrl);
-                    setSaved(true);
-                    setTimeout(() => setSaved(false), 1500);
+                    const letter = companyName.charAt(0).toUpperCase();
+
+                    // All available color combinations (24 options)
+                    const allColorCombinations = [
+                      { name: 'Blue Purple', from: '#3b82f6', to: '#8b5cf6' },
+                      { name: 'Purple Pink', from: '#8b5cf6', to: '#ec4899' },
+                      { name: 'Emerald Cyan', from: '#10b981', to: '#06b6d4' },
+                      { name: 'Orange Yellow', from: '#f97316', to: '#eab308' },
+                      { name: 'Red Orange', from: '#ef4444', to: '#f97316' },
+                      { name: 'Indigo Purple', from: '#6366f1', to: '#a855f7' },
+                      { name: 'Teal Green', from: '#14b8a6', to: '#10b981' },
+                      { name: 'Pink Rose', from: '#ec4899', to: '#f43f5e' },
+                      { name: 'Lime Green', from: '#84cc16', to: '#22c55e' },
+                      { name: 'Violet Fuchsia', from: '#7c3aed', to: '#d946ef' },
+                      { name: 'Sky Blue', from: '#0ea5e9', to: '#06b6d4' },
+                      { name: 'Amber Orange', from: '#f59e0b', to: '#f97316' },
+                      { name: 'Cyan Teal', from: '#06b6d4', to: '#14b8a6' },
+                      { name: 'Fuchsia Pink', from: '#d946ef', to: '#ec4899' },
+                      { name: 'Blue Cyan', from: '#3b82f6', to: '#06b6d4' },
+                      { name: 'Green Emerald', from: '#22c55e', to: '#10b981' },
+                      { name: 'Red Pink', from: '#ef4444', to: '#ec4899' },
+                      { name: 'Purple Indigo', from: '#a855f7', to: '#6366f1' },
+                      { name: 'Yellow Lime', from: '#eab308', to: '#84cc16' },
+                      { name: 'Rose Red', from: '#f43f5e', to: '#ef4444' },
+                      { name: 'Indigo Blue', from: '#6366f1', to: '#3b82f6' },
+                      { name: 'Teal Cyan', from: '#14b8a6', to: '#06b6d4' },
+                      { name: 'Orange Amber', from: '#f97316', to: '#f59e0b' },
+                      { name: 'Pink Fuchsia', from: '#ec4899', to: '#d946ef' }
+                    ];
+
+                    // Shuffle and pick 8 random combinations each time
+                    const shuffled = [...allColorCombinations].sort(() => Math.random() - 0.5);
+                    const selectedCombinations = shuffled.slice(0, 8);
+
+                    const variations = selectedCombinations.map(combo => ({
+                      name: combo.name,
+                      dataUrl: generateLetterFavicon(companyName, combo.from, combo.to),
+                      from: combo.from,
+                      to: combo.to
+                    }));
+
+                    setFaviconVariations(variations);
                   }}
                   className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all text-sm font-medium flex items-center justify-center gap-2"
                 >
                   <Sparkles size={14} />
-                  Generate Letter Favicon
+                  {faviconVariations.length > 0 ? 'Generate New Variations' : 'Generate Letter Favicon'}
                 </button>
+                {faviconVariations.length > 0 && (
+                  <p className="text-xs text-gray-500 mt-2 text-center">
+                    Click to generate 8 new random color combinations
+                  </p>
+                )}
               </div>
+
+              {faviconVariations.length > 0 && (
+                <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-4">
+                  <label className="block text-xs font-medium mb-3 text-gray-500">
+                    Choose a variation (click to apply)
+                  </label>
+                  <div className="grid grid-cols-4 gap-3">
+                    {faviconVariations.map((variation, index) => (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          setFaviconPreview(variation.dataUrl);
+                          saveFaviconToStorage(currentSite.id, variation.dataUrl);
+                          updateFavicon(variation.dataUrl);
+                          setSaved(true);
+                          setTimeout(() => setSaved(false), 1500);
+                        }}
+                        className="group relative aspect-square border-2 border-gray-700 rounded-lg overflow-hidden hover:border-blue-500 transition-all hover:scale-105"
+                        title={variation.name}
+                      >
+                        <img
+                          src={variation.dataUrl}
+                          alt={variation.name}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all flex items-center justify-center">
+                          <span className="text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                            Apply
+                          </span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Upload Custom (Hardcoded for presentation) */}
               <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-4">
@@ -1662,45 +1755,34 @@ export default function QuickEdit() {
             </div>
           )}
 
-          {/* Save Button */}
-          <div className="mt-6 pt-4 border-t border-gray-800/50 sticky bottom-0 bg-black pb-4">
-            <div className="flex gap-2">
-              <button
-                onClick={handleSave}
-                className={`flex-1 py-2 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-1.5 ${
-                  saved
-                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                    : 'bg-blue-500 text-white hover:bg-blue-600'
-                }`}
-              >
-                <Save size={14} />
-                {saved ? 'Saved' : 'Save'}
-              </button>
+          {/* Auto-save indicator - компактный */}
+          <div className="mt-6 pt-4 border-t border-gray-800/50">
+            <div className="flex items-center justify-between">
+              {/* Auto-save status */}
+              <div className="flex items-center gap-2">
+                {saved ? (
+                  <>
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    <span className="text-xs text-green-400">Изменения сохранены</span>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-2 h-2 bg-gray-600 rounded-full"></div>
+                    <span className="text-xs text-gray-600">Автосохранение активно</span>
+                  </>
+                )}
+              </div>
 
-              <button
-                onClick={() => setShowAI(true)}
-                className="px-3 py-2 bg-purple-500/10 text-purple-400 border border-purple-500/30 rounded-lg hover:bg-purple-500/20 transition-all flex items-center gap-1.5 text-sm font-medium"
-              >
-                <Sparkles size={14} />
-                AI
-              </button>
-
-              <button
-                onClick={handleReset}
-                className="px-3 py-2 border border-gray-700 rounded-lg hover:bg-gray-800/50 transition-colors flex items-center gap-1.5 text-sm"
-                title="Reset"
-              >
-                <RefreshCw size={14} />
-              </button>
-
+              {/* Action button - только превью */}
               <a
                 href="/2"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-3 py-2 border border-gray-700 rounded-lg hover:bg-gray-800/50 transition-colors flex items-center gap-1.5 text-sm"
-                title="Preview"
+                className="px-3 py-1.5 border border-gray-700 rounded-lg hover:bg-gray-800/50 transition-colors flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-300"
+                title="Открыть превью сайта"
               >
                 <ExternalLink size={14} />
+                <span>Превью</span>
               </a>
             </div>
           </div>
@@ -1727,6 +1809,17 @@ export default function QuickEdit() {
           currentData={siteData}
           onApplySuggestion={handleAISuggestion}
           onClose={() => setShowAI(false)}
+        />
+      )}
+
+      {/* Welcome Tour Modal */}
+      {showWelcomeTour && (
+        <WelcomeTour
+          onClose={() => setShowWelcomeTour(false)}
+          onNavigate={(target) => {
+            setActiveSection(target);
+            setShowWelcomeTour(false);
+          }}
         />
       )}
     </div>

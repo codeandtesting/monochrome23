@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   MessageSquare,
@@ -12,13 +12,18 @@ import {
   Menu,
   X,
   Globe,
-  Sparkles
+  Sparkles,
+  ChevronUp,
+  User
 } from 'lucide-react';
 import { getActiveSite } from '../../utils/sitesStorage';
 
 export default function Sidebar({ isOpen, setIsOpen }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const [activeSite, setActiveSite] = useState(null);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef(null);
 
   useEffect(() => {
     loadActiveSite();
@@ -35,6 +40,23 @@ export default function Sidebar({ isOpen, setIsOpen }) {
       window.removeEventListener('sitesUpdated', handleSiteChange);
     };
   }, []);
+
+  // Close profile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setProfileMenuOpen(false);
+      }
+    };
+
+    if (profileMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [profileMenuOpen]);
 
   const loadActiveSite = () => {
     const site = getActiveSite();
@@ -72,6 +94,15 @@ export default function Sidebar({ isOpen, setIsOpen }) {
       label: 'Integrations',
       gradient: 'from-yellow-500 to-orange-500'
     },
+  ];
+
+  const profileMenuItems = [
+    {
+      path: '/dashboard/settings',
+      icon: Settings,
+      label: 'Settings',
+      gradient: 'from-gray-500 to-slate-500'
+    },
     {
       path: '/dashboard/subscription',
       icon: CreditCard,
@@ -79,13 +110,14 @@ export default function Sidebar({ isOpen, setIsOpen }) {
       gradient: 'from-pink-500 to-rose-500',
       badge: 'Pro'
     },
-    {
-      path: '/dashboard/settings',
-      icon: Settings,
-      label: 'Settings',
-      gradient: 'from-gray-500 to-slate-500'
-    },
   ];
+
+  const handleLogout = () => {
+    // TODO: Implement logout logic (clear localStorage, redirect to login)
+    console.log('Logout clicked');
+    // For now, just redirect to home
+    navigate('/');
+  };
 
   const isActive = (path) => {
     if (path === '/dashboard') {
@@ -171,15 +203,105 @@ export default function Sidebar({ isOpen, setIsOpen }) {
             })}
           </nav>
 
-          {/* Bottom Section - View Site */}
-          <div className="p-4 border-t border-gray-800/50">
-            <Link
-              to={activeSite?.url || '/'}
-              className="group flex items-center space-x-3 px-3 py-2.5 rounded-lg bg-blue-500/5 border border-blue-500/20 hover:border-blue-500/40 text-gray-400 hover:text-white transition-all"
+          {/* Bottom Section - User Profile Menu */}
+          <div className="p-4 border-t border-gray-800/50 relative" ref={profileMenuRef}>
+            {/* Profile Menu Dropdown */}
+            {profileMenuOpen && (
+              <div className="absolute bottom-full left-4 right-4 mb-2 bg-gray-900 border border-gray-800 rounded-lg shadow-2xl overflow-hidden animate-fadeInUp">
+                <div className="py-1">
+                  {profileMenuItems.map((item) => (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => {
+                        setProfileMenuOpen(false);
+                        setIsOpen(false);
+                      }}
+                      className={`
+                        group flex items-center justify-between px-4 py-2.5
+                        hover:bg-gray-800/50 transition-colors
+                        ${isActive(item.path) ? 'bg-gray-800/30' : ''}
+                      `}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <item.icon size={16} className="text-gray-400 group-hover:text-white transition-colors" />
+                        <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
+                          {item.label}
+                        </span>
+                      </div>
+                      {item.badge && (
+                        <span className="px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 text-xs font-medium rounded">
+                          {item.badge}
+                        </span>
+                      )}
+                    </Link>
+                  ))}
+
+                  {/* Divider */}
+                  <div className="my-1 border-t border-gray-800"></div>
+
+                  {/* View Live Site */}
+                  <Link
+                    to={activeSite?.url || '/'}
+                    onClick={() => {
+                      setProfileMenuOpen(false);
+                      setIsOpen(false);
+                    }}
+                    className="group flex items-center space-x-3 px-4 py-2.5 hover:bg-gray-800/50 transition-colors"
+                  >
+                    <Sparkles size={16} className="text-gray-400 group-hover:text-blue-400 transition-colors" />
+                    <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
+                      View Live Site
+                    </span>
+                  </Link>
+
+                  {/* Divider */}
+                  <div className="my-1 border-t border-gray-800"></div>
+
+                  {/* Logout */}
+                  <button
+                    onClick={handleLogout}
+                    className="w-full group flex items-center space-x-3 px-4 py-2.5 hover:bg-red-500/10 transition-colors text-left"
+                  >
+                    <LogOut size={16} className="text-gray-400 group-hover:text-red-400 transition-colors" />
+                    <span className="text-sm text-gray-300 group-hover:text-red-400 transition-colors">
+                      Logout
+                    </span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Profile Button */}
+            <button
+              onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+              className={`
+                group w-full flex items-center justify-between px-3 py-2.5 rounded-lg
+                border transition-all
+                ${
+                  profileMenuOpen
+                    ? 'bg-gray-800/50 border-gray-700'
+                    : 'bg-gray-900/50 border-gray-800 hover:bg-gray-800/30 hover:border-gray-700'
+                }
+              `}
             >
-              <Sparkles size={16} />
-              <span className="text-sm font-normal">View Live Site</span>
-            </Link>
+              <div className="flex items-center space-x-3">
+                {/* User Avatar with "U" */}
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-semibold text-sm">U</span>
+                </div>
+                <div className="text-left">
+                  <div className="text-sm font-medium text-white">Artjom</div>
+                  <div className="text-xs text-gray-500">Pro plan</div>
+                </div>
+              </div>
+              <ChevronUp
+                size={16}
+                className={`text-gray-500 transition-transform duration-200 ${
+                  profileMenuOpen ? 'rotate-180' : ''
+                }`}
+              />
+            </button>
           </div>
         </div>
       </aside>
