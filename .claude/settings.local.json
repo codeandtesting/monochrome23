@@ -4,7 +4,9 @@
       "Bash(npx prettier:*)",
       "Bash(npm run dev:*)",
       "Bash(test:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
