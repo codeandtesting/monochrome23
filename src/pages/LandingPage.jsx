@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Zap, Clock, Palette, Globe, TrendingUp, CheckCircle, Play, Star, Users, Rocket } from 'lucide-react';
+import { Sparkles, Zap, Clock, MessageCircle, Globe, TrendingUp, CheckCircle, Play, Star, Users, Rocket, Moon, Coffee, Target, BarChart3, Shield } from 'lucide-react';
 
 export default function LandingPage() {
   const navigate = useNavigate();
   const [typedText, setTypedText] = useState('');
   const [isTyping, setIsTyping] = useState(true);
 
-  const fullText = 'Create Your Website in 60 Seconds';
+  const fullText = 'Launch Your Selling Website in 60 Seconds';
 
   // Typing animation
   useEffect(() => {
@@ -29,46 +29,65 @@ export default function LandingPage() {
 
   const features = [
     {
-      icon: <Zap className="w-8 h-8" />,
-      title: "Create in 60 Seconds",
-      description: "AI-powered website builder. Just describe your business and get a professional site instantly.",
-      gradient: "from-yellow-500 to-orange-500"
-    },
-    {
-      icon: <TrendingUp className="w-8 h-8" />,
-      title: "Generate Leads Today",
-      description: "Start capturing leads immediately with built-in AI chat and smart forms.",
-      gradient: "from-green-500 to-emerald-500"
-    },
-    {
-      icon: <Clock className="w-8 h-8" />,
-      title: "Works While You Sleep",
-      description: "24/7 AI assistant engages visitors and collects information even when you're offline.",
+      icon: <MessageCircle className="w-8 h-8" />,
+      title: "AI Chatbot Works 24/7",
+      description: "Your virtual manager talks to clients, answers questions and collects contacts — even while you sleep.",
       gradient: "from-blue-500 to-cyan-500"
     },
     {
-      icon: <Palette className="w-8 h-8" />,
-      title: "Flexible Color Settings",
-      description: "6 beautiful color schemes. Match your brand perfectly with one click.",
-      gradient: "from-purple-500 to-pink-500"
+      icon: <Zap className="w-8 h-8" />,
+      title: "Launch in 60 Seconds",
+      description: "Just answer 3 questions — artificial intelligence creates a complete selling website instantly.",
+      gradient: "from-yellow-500 to-orange-500"
     },
     {
       icon: <Globe className="w-8 h-8" />,
-      title: "For All Business Types",
-      description: "From agencies to freelancers, restaurants to tech startups. One platform, infinite possibilities.",
+      title: "Unlimited Websites",
+      description: "Manage all your projects from one dashboard. Each client gets their own site with unique design.",
+      gradient: "from-purple-500 to-pink-500"
+    },
+    {
+      icon: <Target className="w-8 h-8" />,
+      title: "No Coding Required",
+      description: "Visual editor with quick edits. Change text, colors, services — everything in a few clicks.",
+      gradient: "from-green-500 to-emerald-500"
+    },
+    {
+      icon: <BarChart3 className="w-8 h-8" />,
+      title: "Analytics & Leads",
+      description: "Track visitors, requests and AI conversations in real-time. All leads in one place.",
       gradient: "from-indigo-500 to-blue-500"
     },
     {
-      icon: <CheckCircle className="w-8 h-8" />,
+      icon: <Shield className="w-8 h-8" />,
       title: "Completely Free",
-      description: "No credit card required. No hidden fees. Start building your online presence today.",
+      description: "No card required, no hidden fees, no limits on number of sites. Start right now.",
       gradient: "from-teal-500 to-green-500"
     }
   ];
 
+  // Live counter effect
+  const [sitesCount, setSitesCount] = useState(53100);
+  const [usersCount, setUsersCount] = useState(24100);
+
+  useEffect(() => {
+    const sitesInterval = setInterval(() => {
+      setSitesCount(prev => prev + Math.floor(Math.random() * 3));
+    }, 3000);
+
+    const usersInterval = setInterval(() => {
+      setUsersCount(prev => prev + Math.floor(Math.random() * 2));
+    }, 5000);
+
+    return () => {
+      clearInterval(sitesInterval);
+      clearInterval(usersInterval);
+    };
+  }, []);
+
   const stats = [
-    { icon: <Rocket />, value: "10K+", label: "Sites Created", gradient: "from-blue-500 to-cyan-500" },
-    { icon: <Users />, value: "50K+", label: "Happy Users", gradient: "from-purple-500 to-pink-500" },
+    { icon: <Rocket />, value: sitesCount.toLocaleString() + '+', label: "Sites Created", gradient: "from-blue-500 to-cyan-500", live: true },
+    { icon: <Users />, value: usersCount.toLocaleString() + '+', label: "Active Users", gradient: "from-purple-500 to-pink-500", live: true },
     { icon: <Star />, value: "4.9", label: "Average Rating", gradient: "from-yellow-500 to-orange-500" }
   ];
 
@@ -132,32 +151,42 @@ export default function LandingPage() {
             </span>
           </h1>
 
-          <p className="text-xl sm:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto animate-fadeInUp">
-            AI-powered platform that builds professional websites instantly.<br />
-            <span className="text-green-400 font-semibold">Start generating leads today.</span>
+          <p className="text-xl sm:text-2xl text-gray-300 mb-4 max-w-3xl mx-auto animate-fadeInUp leading-relaxed">
+            <span className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent block mb-3">
+              While You Sleep — Your Site Works
+            </span>
+            AI chatbot talks to clients, answers questions<br />
+            and collects leads 24/7
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12 animate-fadeInUp animation-delay-300">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8 animate-fadeInUp animation-delay-300">
             <button
               onClick={() => navigate('/onboarding')}
-              className="group px-8 py-4 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 rounded-lg text-lg font-semibold transition-all transform hover:scale-105 hover:shadow-2xl hover:shadow-green-500/50 flex items-center gap-2"
+              className="group px-10 py-5 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 rounded-xl text-xl font-bold transition-all transform hover:scale-105 hover:shadow-2xl hover:shadow-green-500/50 flex items-center gap-3"
             >
-              <Sparkles size={20} className="group-hover:rotate-12 transition-transform" />
-              Get Started Free
+              <Sparkles size={24} className="group-hover:rotate-12 transition-transform" />
+              Create Site Free
             </button>
             <button
               onClick={() => navigate('/2')}
-              className="group px-8 py-4 border-2 border-gray-600 hover:border-blue-500 hover:bg-blue-500/10 rounded-lg text-lg font-semibold transition-all flex items-center gap-2"
+              className="group px-10 py-5 border-2 border-gray-600 hover:border-blue-500 hover:bg-blue-500/10 rounded-xl text-xl font-bold transition-all flex items-center gap-3"
             >
-              <Play size={20} className="group-hover:translate-x-1 transition-transform" />
+              <Play size={24} className="group-hover:translate-x-1 transition-transform" />
               Watch Demo
             </button>
+          </div>
+
+          {/* Urgency message */}
+          <div className="mb-12 animate-fadeInUp animation-delay-400">
+            <p className="text-gray-400 text-lg">
+              <span className="text-green-400 font-semibold">Get your first lead</span> today
+            </p>
           </div>
 
           {/* Free Badge */}
           <div className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/50 rounded-full backdrop-blur-sm animate-fadeInUp animation-delay-600 hover:scale-105 transition-transform">
             <CheckCircle size={20} className="text-yellow-400 animate-pulse" />
-            <span className="text-yellow-100 font-semibold">100% FREE • No Credit Card Required</span>
+            <span className="text-yellow-100 font-semibold">100% FREE • No Credit Card • Unlimited</span>
           </div>
         </div>
 
@@ -167,7 +196,37 @@ export default function LandingPage() {
         <div className="absolute bottom-20 left-1/4 w-24 h-24 bg-pink-500/10 rounded-full blur-xl animate-float animation-delay-4000"></div>
       </section>
 
-      {/* Stats Section */}
+      {/* Pain Points Section */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
+            <span className="text-red-400">Tired</span> of These Problems?
+          </h2>
+          <p className="text-center text-gray-400 mb-12 text-lg">We know what's stopping you</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-6 bg-red-500/5 border border-red-500/20 rounded-xl">
+              <div className="text-4xl mb-3">⏰</div>
+              <h3 className="text-xl font-bold mb-2 text-red-400">Slow & Expensive</h3>
+              <p className="text-gray-400">Developers charge $1000+ and take months. Every edit costs extra.</p>
+            </div>
+
+            <div className="p-6 bg-red-500/5 border border-red-500/20 rounded-xl">
+              <div className="text-4xl mb-3">😴</div>
+              <h3 className="text-xl font-bold mb-2 text-red-400">Site Doesn't Sell</h3>
+              <p className="text-gray-400">Visitors come and go. No chat, no one to answer questions at 3 AM.</p>
+            </div>
+
+            <div className="p-6 bg-red-500/5 border border-red-500/20 rounded-xl">
+              <div className="text-4xl mb-3">🤯</div>
+              <h3 className="text-xl font-bold mb-2 text-red-400">Complex Management</h3>
+              <p className="text-gray-400">WordPress, hosting, domains, updates. Need a tech expert for every little thing.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section with Live Counters */}
       <section className="py-12 px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -181,8 +240,14 @@ export default function LandingPage() {
                     {stat.icon}
                   </div>
                 </div>
-                <div className={`text-4xl font-bold mb-2 bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent`}>
+                <div className={`text-4xl font-bold mb-2 bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent flex items-center justify-center gap-2`}>
                   {stat.value}
+                  {stat.live && (
+                    <span className="relative flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                    </span>
+                  )}
                 </div>
                 <div className="text-gray-400">{stat.label}</div>
               </div>
@@ -197,7 +262,7 @@ export default function LandingPage() {
           <h2 className="text-4xl sm:text-5xl font-bold text-center mb-4">
             Why Choose <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Monochrome?</span>
           </h2>
-          <p className="text-center text-gray-400 mb-16 text-lg">Everything you need to launch your online presence</p>
+          <p className="text-center text-gray-400 mb-16 text-lg">Everything you need to launch a selling website</p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
@@ -223,24 +288,92 @@ export default function LandingPage() {
       <section className="py-20 px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
           <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-2xl p-12 backdrop-blur-sm hover:scale-105 transition-transform">
+            <div className="flex items-center justify-center gap-3 mb-6">
+              <Moon className="w-12 h-12 text-blue-400" />
+              <Coffee className="w-12 h-12 text-orange-400" />
+            </div>
             <h2 className="text-4xl sm:text-5xl font-bold mb-6">
               While You Sleep,<br />
               <span className="bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
-                Your Website Works
+                Your Site Sells For You
               </span>
             </h2>
-            <p className="text-xl text-gray-300 mb-8">
-              AI chat assistant engages every visitor, answers questions,<br />
-              and collects leads automatically. 24/7.
+            <p className="text-xl text-gray-300 mb-8 leading-relaxed">
+              AI chatbot talks to every visitor, answers questions,<br />
+              tells about your services and collects leads automatically.<br />
+              <span className="text-green-400 font-semibold">24/7. No days off. No salary.</span>
             </p>
             <button
               onClick={() => navigate('/onboarding')}
-              className="group px-10 py-5 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 rounded-lg text-xl font-bold transition-all transform hover:scale-110 hover:shadow-2xl hover:shadow-green-500/50 flex items-center gap-3 mx-auto"
+              className="group px-12 py-6 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 rounded-xl text-2xl font-bold transition-all transform hover:scale-110 hover:shadow-2xl hover:shadow-green-500/50 flex items-center gap-3 mx-auto"
             >
-              <Sparkles size={24} className="group-hover:rotate-180 transition-transform duration-500" />
-              Start Building Now
-              <Sparkles size={24} className="group-hover:rotate-180 transition-transform duration-500" />
+              <Sparkles size={28} className="group-hover:rotate-180 transition-transform duration-500" />
+              Launch in 60 Seconds
+              <Sparkles size={28} className="group-hover:rotate-180 transition-transform duration-500" />
             </button>
+            <p className="text-gray-400 mt-6 text-lg">
+              Get your <span className="text-green-400 font-semibold">first lead today</span>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-4xl sm:text-5xl font-bold text-center mb-4">
+            Frequently Asked Questions
+          </h2>
+          <p className="text-center text-gray-400 mb-12 text-lg">Everything you need to know</p>
+
+          <div className="space-y-4">
+            <div className="p-6 bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl hover:border-gray-700 transition-all">
+              <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
+                <span className="text-blue-400">❓</span>
+                Really in 60 seconds?
+              </h3>
+              <p className="text-gray-400">Yes! Answer 3 questions — AI creates the site automatically. Text, design, chatbot — everything ready to work.</p>
+            </div>
+
+            <div className="p-6 bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl hover:border-gray-700 transition-all">
+              <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
+                <span className="text-green-400">💰</span>
+                How much does it cost?
+              </h3>
+              <p className="text-gray-400">Completely free. No hidden fees, no trial period. Create unlimited websites.</p>
+            </div>
+
+            <div className="p-6 bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl hover:border-gray-700 transition-all">
+              <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
+                <span className="text-purple-400">🤖</span>
+                How does the AI chatbot work?
+              </h3>
+              <p className="text-gray-400">The chatbot learns your services and answers visitor questions 24/7. It collects contacts, talks about prices and services — like an experienced manager.</p>
+            </div>
+
+            <div className="p-6 bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl hover:border-gray-700 transition-all">
+              <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
+                <span className="text-orange-400">⚙️</span>
+                Do I need technical knowledge?
+              </h3>
+              <p className="text-gray-400">No! The interface is intuitive and easy. Change text, add services, customize colors — like a regular editor.</p>
+            </div>
+
+            <div className="p-6 bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl hover:border-gray-700 transition-all">
+              <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
+                <span className="text-pink-400">📱</span>
+                Does it work on phones?
+              </h3>
+              <p className="text-gray-400">Yes! All sites are responsive — look beautiful on any device: smartphones, tablets, desktops.</p>
+            </div>
+
+            <div className="p-6 bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl hover:border-gray-700 transition-all">
+              <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
+                <span className="text-yellow-400">🔒</span>
+                Is my data safe?
+              </h3>
+              <p className="text-gray-400">Absolutely! All data is stored locally in your browser. We don't collect personal information or share it with third parties.</p>
+            </div>
           </div>
         </div>
       </section>
@@ -267,7 +400,7 @@ export default function LandingPage() {
               <h4 className="font-semibold mb-4">Product</h4>
               <ul className="space-y-2 text-gray-400">
                 <li><button onClick={() => navigate('/onboarding')} className="hover:text-white transition-colors">Create Site</button></li>
-                <li><button onClick={() => navigate('/2')} className="hover:text-white transition-colors">View Demo</button></li>
+                <li><button onClick={() => navigate('/2')} className="hover:text-white transition-colors">Demo</button></li>
                 <li><button onClick={() => navigate('/dashboard')} className="hover:text-white transition-colors">Dashboard</button></li>
               </ul>
             </div>

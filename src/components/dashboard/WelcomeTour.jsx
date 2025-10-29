@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Sparkles,
   X,
@@ -12,11 +12,18 @@ import {
   ExternalLink,
   Phone,
   Mail,
-  MapPin
+  MapPin,
+  MessageCircle,
+  Send,
+  Bot,
+  Globe,
+  Image
 } from 'lucide-react';
 import { getActiveSite, updateSite } from '../../utils/sitesStorage';
 import { getDesignSettings, saveDesignSettings, COLOR_SCHEMES, applyColorScheme } from '../../utils/designStorage';
 import { SERVICES_CATEGORIES } from '../../data/servicesData';
+import { chatWithDeepSeek } from '../../api/deepseek';
+import { generateSiteSystemPrompt } from '../../utils/dynamicPrompt';
 
 export default function WelcomeTour({ onClose, onNavigate }) {
   const [currentStep, setCurrentStep] = useState(0);
@@ -26,6 +33,35 @@ export default function WelcomeTour({ onClose, onNavigate }) {
   const [currentSite, setCurrentSite] = useState(null);
   const [siteData, setSiteData] = useState(null);
   const [designSettings, setDesignSettings] = useState(getDesignSettings());
+
+  // Mini chat state
+  const [chatInput, setChatInput] = useState('');
+  const [chatMessages, setChatMessages] = useState([]);
+  const [isAiTyping, setIsAiTyping] = useState(false);
+  const chatEndRef = useRef(null);
+
+  // Scroll chat to bottom
+  const scrollChatToBottom = () => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Initialize chat greeting when site loads
+  useEffect(() => {
+    if (currentSite) {
+      const companyName = currentSite.data?.hero?.companyName || 'вашей компании';
+      setChatMessages([
+        {
+          role: 'assistant',
+          content: `Привет! Я AI-чатбот для ${companyName}. Задайте мне вопрос об услугах, и я отвечу! 👋`
+        }
+      ]);
+    }
+  }, [currentSite]);
+
+  // Auto-scroll chat on new messages
+  useEffect(() => {
+    scrollChatToBottom();
+  }, [chatMessages, isAiTyping]);
 
   // Load site data on mount
   useEffect(() => {
@@ -119,6 +155,56 @@ export default function WelcomeTour({ onClose, onNavigate }) {
     window.dispatchEvent(new Event('designSettingsUpdated'));
   };
 
+  const handleChatSend = async () => {
+    if (!chatInput.trim() || isAiTyping || !currentSite) return;
+
+    const userMessage = {
+      role: 'user',
+      content: chatInput
+    };
+
+    setChatMessages(prev => [...prev, userMessage]);
+    setChatInput('');
+    setIsAiTyping(true);
+
+    try {
+      // Генерируем системный промпт на основе данных сайта
+      const systemPrompt = generateSiteSystemPrompt(
+        currentSite.data,
+        currentSite.services || []
+      );
+
+      // Собираем историю сообщений для API
+      const conversationHistory = [
+        { role: 'system', content: systemPrompt },
+        ...chatMessages.map(msg => ({
+          role: msg.role,
+          content: msg.content
+        })),
+        { role: 'user', content: userMessage.content }
+      ];
+
+      // Вызываем реальный API
+      const aiResponse = await chatWithDeepSeek(conversationHistory);
+
+      const aiMessage = {
+        role: 'assistant',
+        content: aiResponse
+      };
+
+      setChatMessages(prev => [...prev, aiMessage]);
+    } catch (error) {
+      console.error('Chat error:', error);
+      const errorMessage = {
+        role: 'assistant',
+        content: 'Извините, произошла ошибка. Попробуйте снова! 😔'
+      };
+      setChatMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsAiTyping(false);
+    }
+  };
+
   if (!siteData) {
     return null;
   }
@@ -160,6 +246,13 @@ export default function WelcomeTour({ onClose, onNavigate }) {
       type: 'contacts-edit'
     },
     {
+      title: 'Поговорите с AI-чатботом 🤖',
+      description: 'Попробуйте пообщаться с вашим AI-ассистентом! Он будет отвечать на вопросы посетителей 24/7.',
+      icon: MessageCircle,
+      gradient: 'from-blue-500 to-purple-500',
+      type: 'chat-demo'
+    },
+    {
       title: 'Готово! 🚀',
       description: 'Вы готовы к работе! Ваш сайт настроен и готов к использованию.',
       icon: CheckCircle2,
@@ -173,6 +266,7 @@ export default function WelcomeTour({ onClose, onNavigate }) {
     { id: 'services', label: 'Добавить услуги', icon: Zap, target: 'services' },
     { id: 'design', label: 'Выбрать цветовую схему', icon: Palette, target: 'visual' },
     { id: 'contacts', label: 'Добавить контакты', icon: Share2, target: 'contacts' },
+    { id: 'portfolio', label: 'Добавить портфолио', icon: Image, target: 'portfolio' },
     { id: 'preview', label: 'Просмотреть сайт', icon: Eye, action: 'preview' }
   ];
 
@@ -402,77 +496,232 @@ export default function WelcomeTour({ onClose, onNavigate }) {
           )}
 
           {currentStepData.type === 'contacts-edit' && (
-            <div className="space-y-4 mb-6 bg-gray-800/50 border border-gray-700 rounded-lg p-4">
-              <div>
-                <label className="block text-xs font-medium mb-2 text-gray-400 flex items-center gap-2">
-                  <Phone size={14} />
-                  Телефон
-                </label>
-                <input
-                  type="tel"
-                  value={siteData.contacts?.phone || ''}
-                  onChange={(e) => updateContacts('phone', e.target.value)}
-                  placeholder="+7 (999) 123-45-67"
-                  className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium mb-2 text-gray-400 flex items-center gap-2">
-                  <Mail size={14} />
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={siteData.contacts?.email || ''}
-                  onChange={(e) => updateContacts('email', e.target.value)}
-                  placeholder="info@company.com"
-                  className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium mb-2 text-gray-400 flex items-center gap-2">
-                  <MapPin size={14} />
-                  Адрес
-                </label>
-                <input
-                  type="text"
-                  value={siteData.contacts?.address || ''}
-                  onChange={(e) => updateContacts('address', e.target.value)}
-                  placeholder="г. Москва, ул. Примерная, д. 1"
-                  className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50"
-                />
+            <div className="mb-6 bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Phone */}
+                <div>
+                  <label className="block text-xs font-medium mb-2 text-gray-400 flex items-center gap-2">
+                    <Phone size={14} />
+                    Телефон
+                  </label>
+                  <input
+                    type="tel"
+                    value={siteData.contacts?.phone || ''}
+                    onChange={(e) => updateContacts('phone', e.target.value)}
+                    placeholder="+7 (999) 123-45-67"
+                    className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50"
+                  />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="block text-xs font-medium mb-2 text-gray-400 flex items-center gap-2">
+                    <Mail size={14} />
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={siteData.contacts?.email || ''}
+                    onChange={(e) => updateContacts('email', e.target.value)}
+                    placeholder="info@company.com"
+                    className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50"
+                  />
+                </div>
+
+                {/* WhatsApp */}
+                <div>
+                  <label className="block text-xs font-medium mb-2 text-gray-400 flex items-center gap-2">
+                    <Phone size={14} />
+                    WhatsApp
+                  </label>
+                  <input
+                    type="tel"
+                    value={siteData.contacts?.whatsapp || ''}
+                    onChange={(e) => updateContacts('whatsapp', e.target.value)}
+                    placeholder="+7 (999) 123-45-67"
+                    className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50"
+                  />
+                </div>
+
+                {/* Telegram */}
+                <div>
+                  <label className="block text-xs font-medium mb-2 text-gray-400 flex items-center gap-2">
+                    <Send size={14} />
+                    Telegram
+                  </label>
+                  <input
+                    type="text"
+                    value={siteData.contacts?.telegram || ''}
+                    onChange={(e) => updateContacts('telegram', e.target.value)}
+                    placeholder="@username"
+                    className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50"
+                  />
+                </div>
+
+                {/* Address - Full width */}
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-medium mb-2 text-gray-400 flex items-center gap-2">
+                    <MapPin size={14} />
+                    Адрес
+                  </label>
+                  <input
+                    type="text"
+                    value={siteData.contacts?.address || ''}
+                    onChange={(e) => updateContacts('address', e.target.value)}
+                    placeholder="г. Москва, ул. Примерная, д. 1"
+                    className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50"
+                  />
+                </div>
               </div>
             </div>
           )}
 
-          {/* Checklist on last step */}
-          {currentStep === steps.length - 1 && (
-            <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 mb-6">
-              <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                <CheckCircle2 size={16} className="text-green-400" />
-                Чеклист для начала
-              </h3>
-              <div className="space-y-2">
-                {checklist.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      if (item.action === 'preview') {
-                        // Open preview in new tab
-                        window.open(window.location.origin + '/preview', '_blank');
-                      } else if (item.target && onNavigate) {
-                        onNavigate(item.target);
-                        onClose();
+          {/* Chat Demo */}
+          {currentStepData.type === 'chat-demo' && (
+            <div className="mb-6 bg-gray-800/50 border border-gray-700 rounded-lg overflow-hidden">
+              {/* Chat Messages */}
+              <div className="h-64 overflow-y-auto p-4 space-y-3">
+                {chatMessages.map((msg, index) => (
+                  <div
+                    key={index}
+                    className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    {msg.role === 'assistant' && (
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+                        <Bot size={16} className="text-white" />
+                      </div>
+                    )}
+                    <div
+                      className={`max-w-[80%] px-4 py-2 rounded-xl text-sm ${
+                        msg.role === 'user'
+                          ? 'bg-blue-500 text-white rounded-br-none'
+                          : 'bg-gray-700 text-gray-100 rounded-bl-none'
+                      }`}
+                    >
+                      {msg.content}
+                    </div>
+                  </div>
+                ))}
+
+                {/* Typing indicator */}
+                {isAiTyping && (
+                  <div className="flex gap-2 justify-start">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+                      <Bot size={16} className="text-white" />
+                    </div>
+                    <div className="bg-gray-700 px-4 py-3 rounded-xl rounded-bl-none">
+                      <div className="flex gap-1">
+                        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Scroll anchor */}
+                <div ref={chatEndRef} />
+              </div>
+
+              {/* Chat Input */}
+              <div className="border-t border-gray-700 p-3 bg-gray-900/50">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !isAiTyping) {
+                        e.preventDefault();
+                        handleChatSend();
                       }
                     }}
-                    className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-700/50 transition-colors text-left group"
+                    placeholder="Задайте вопрос AI-чатботу..."
+                    disabled={isAiTyping}
+                    className="flex-1 px-3 py-2 text-sm bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 disabled:opacity-50"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleChatSend}
+                    disabled={!chatInput.trim() || isAiTyping}
+                    className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-all flex items-center gap-2"
                   >
-                    <Circle size={16} className="text-gray-500 group-hover:text-blue-400 transition-colors" />
-                    <item.icon size={14} className="text-gray-400" />
-                    <span className="text-sm text-gray-300 flex-1">{item.label}</span>
-                    <ArrowRight size={14} className="text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <Send size={16} />
                   </button>
-                ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Final step - View Site Button */}
+          {currentStep === steps.length - 1 && (
+            <div className="mb-6 space-y-4">
+              {/* Big "View Site" button */}
+              <button
+                onClick={() => {
+                  if (currentSite?.url) {
+                    window.open(currentSite.url, '_blank');
+                  }
+                }}
+                className="w-full py-6 bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 hover:from-green-600 hover:via-blue-600 hover:to-purple-600 rounded-xl text-white font-bold text-xl transition-all transform hover:scale-105 hover:shadow-2xl flex items-center justify-center gap-3 group"
+              >
+                <Eye size={24} className="group-hover:scale-110 transition-transform" />
+                Посмотреть сайт
+                <ExternalLink size={20} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+              </button>
+
+              {/* Checklist */}
+              <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+                <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                  <CheckCircle2 size={16} className="text-green-400" />
+                  Чеклист для начала
+                </h3>
+                <div className="space-y-2">
+                  {checklist.map((item) => {
+                    // Check if item is completed
+                    let isCompleted = false;
+                    if (item.id === 'hero') {
+                      isCompleted = !!(siteData.hero?.companyName && siteData.hero?.tagline);
+                    } else if (item.id === 'services') {
+                      isCompleted = currentSite?.services && currentSite.services.length > 0;
+                    } else if (item.id === 'design') {
+                      isCompleted = !!designSettings.colorScheme;
+                    } else if (item.id === 'contacts') {
+                      isCompleted = !!(siteData.contacts?.phone || siteData.contacts?.email);
+                    } else if (item.id === 'portfolio') {
+                      isCompleted = currentSite?.portfolio && currentSite.portfolio.length > 0;
+                    }
+
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          if (item.action === 'preview') {
+                            // Open preview in new tab
+                            if (currentSite?.url) {
+                              window.open(currentSite.url, '_blank');
+                            }
+                          } else if (item.target && onNavigate) {
+                            onNavigate(item.target);
+                            onClose();
+                          }
+                        }}
+                        className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-700/50 transition-colors text-left group"
+                      >
+                        {isCompleted ? (
+                          <CheckCircle2 size={16} className="text-green-400 flex-shrink-0" />
+                        ) : (
+                          <Circle size={16} className="text-gray-500 group-hover:text-blue-400 transition-colors flex-shrink-0" />
+                        )}
+                        <item.icon size={14} className={isCompleted ? "text-green-400" : "text-gray-400"} />
+                        <span className={`text-sm flex-1 ${isCompleted ? "text-gray-200 line-through" : "text-gray-300"}`}>
+                          {item.label}
+                        </span>
+                        <ArrowRight size={14} className="text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           )}
@@ -481,6 +730,7 @@ export default function WelcomeTour({ onClose, onNavigate }) {
           <div className="flex gap-3">
             {currentStep > 0 && (
               <button
+                type="button"
                 onClick={() => setCurrentStep(currentStep - 1)}
                 className="px-6 py-2.5 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors font-medium"
               >
@@ -488,6 +738,7 @@ export default function WelcomeTour({ onClose, onNavigate }) {
               </button>
             )}
             <button
+              type="button"
               onClick={handleNext}
               className={`flex-1 px-6 py-2.5 bg-gradient-to-r ${currentStepData.gradient} text-white rounded-lg hover:opacity-90 transition-all font-medium flex items-center justify-center gap-2`}
             >
@@ -496,6 +747,7 @@ export default function WelcomeTour({ onClose, onNavigate }) {
             </button>
             {currentStep === 0 && (
               <button
+                type="button"
                 onClick={handleSkip}
                 className="px-6 py-2.5 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors font-medium text-gray-400"
               >

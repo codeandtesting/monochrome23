@@ -129,10 +129,11 @@ export default function MySites() {
               <Link
                 to={site.url}
                 target="_blank"
-                className="px-3 py-2 border border-gray-700 text-gray-400 rounded-lg hover:bg-gray-800/50 hover:text-white transition-all flex items-center justify-center"
+                className="px-3 py-2 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white rounded-lg transition-all text-xs font-medium flex items-center gap-1.5 shadow-lg shadow-purple-500/20"
                 title="View site"
               >
                 <ExternalLink size={14} />
+                View Site
               </Link>
 
               {sites.length > 1 && (
