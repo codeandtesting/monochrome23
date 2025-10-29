@@ -56,16 +56,17 @@ export const getSiteByUrl = (url) => {
 // Create new site
 export const createSite = (siteData) => {
   const sites = getAllSites();
-  
+
   // Определяем URL для нового сайта
   const siteUrl = siteData.url || `/${sites.length + 1}`;
-  
+
   const newSite = {
     id: `site_${Date.now()}`,
     name: siteData.name || 'Untitled Site',
     url: siteUrl,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    isNew: true, // Флаг для нового сайта - запустит тур
     data: siteData.data || {
       hero: {
         companyName: siteData.name || 'Untitled Site',
@@ -102,13 +103,13 @@ export const createSite = (siteData) => {
       activeLanding: 'client'
     }
   };
-  
+
   sites.push(newSite);
   localStorage.setItem(SITES_STORAGE_KEY, JSON.stringify(sites));
-  
+
   // Set as active site
   setActiveSite(newSite.id);
-  
+
   return newSite;
 };
 

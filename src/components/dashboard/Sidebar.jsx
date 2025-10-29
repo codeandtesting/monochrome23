@@ -240,24 +240,6 @@ export default function Sidebar({ isOpen, setIsOpen }) {
                   {/* Divider */}
                   <div className="my-1 border-t border-gray-800"></div>
 
-                  {/* View Live Site */}
-                  <Link
-                    to={activeSite?.url || '/'}
-                    onClick={() => {
-                      setProfileMenuOpen(false);
-                      setIsOpen(false);
-                    }}
-                    className="group flex items-center space-x-3 px-4 py-2.5 hover:bg-gray-800/50 transition-colors"
-                  >
-                    <Sparkles size={16} className="text-gray-400 group-hover:text-blue-400 transition-colors" />
-                    <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
-                      View Live Site
-                    </span>
-                  </Link>
-
-                  {/* Divider */}
-                  <div className="my-1 border-t border-gray-800"></div>
-
                   {/* Logout */}
                   <button
                     onClick={handleLogout}

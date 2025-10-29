@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Sparkles,
   X,
@@ -9,45 +9,162 @@ import {
   Eye,
   Share2,
   Zap,
-  ExternalLink
+  ExternalLink,
+  Phone,
+  Mail,
+  MapPin
 } from 'lucide-react';
+import { getActiveSite, updateSite } from '../../utils/sitesStorage';
+import { getDesignSettings, saveDesignSettings, COLOR_SCHEMES, applyColorScheme } from '../../utils/designStorage';
+import { SERVICES_CATEGORIES } from '../../data/servicesData';
 
 export default function WelcomeTour({ onClose, onNavigate }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState([]);
+
+  // Load current site data
+  const [currentSite, setCurrentSite] = useState(null);
+  const [siteData, setSiteData] = useState(null);
+  const [designSettings, setDesignSettings] = useState(getDesignSettings());
+
+  // Load site data on mount
+  useEffect(() => {
+    const site = getActiveSite();
+    if (site) {
+      setCurrentSite(site);
+      setSiteData(site.data || {
+        hero: { companyName: '', tagline: '', description: '' },
+        services: { list: [] },
+        contacts: { heading: 'Get in Touch', phone: '', email: '', address: '' }
+      });
+      if (site.design) {
+        setDesignSettings(site.design);
+      }
+    }
+  }, []);
+
+  // Auto-save on data change
+  useEffect(() => {
+    if (currentSite && siteData) {
+      const debounce = setTimeout(() => {
+        updateSite(currentSite.id, { data: siteData });
+        window.dispatchEvent(new Event('siteDataUpdated'));
+      }, 500);
+      return () => clearTimeout(debounce);
+    }
+  }, [siteData, currentSite]);
+
+  const updateHero = (field, value) => {
+    setSiteData(prev => ({
+      ...prev,
+      hero: { ...prev.hero, [field]: value }
+    }));
+  };
+
+  const updateContacts = (field, value) => {
+    setSiteData(prev => ({
+      ...prev,
+      contacts: { ...prev.contacts, [field]: value }
+    }));
+  };
+
+  const addService = () => {
+    const newService = {
+      id: `service_${Date.now()}`,
+      title: '',
+      description: '',
+      category: SERVICES_CATEGORIES[0],
+      active: true
+    };
+
+    if (currentSite) {
+      const updatedServices = [...(currentSite.services || []), newService];
+      updateSite(currentSite.id, { services: updatedServices });
+
+      // Обновляем локальное состояние
+      setCurrentSite(prev => ({ ...prev, services: updatedServices }));
+    }
+  };
+
+  const updateService = (index, field, value) => {
+    if (currentSite) {
+      const updatedServices = currentSite.services.map((item, i) =>
+        i === index ? { ...item, [field]: value } : item
+      );
+      updateSite(currentSite.id, { services: updatedServices });
+      setCurrentSite(prev => ({ ...prev, services: updatedServices }));
+    }
+  };
+
+  const removeService = (index) => {
+    if (currentSite) {
+      const updatedServices = currentSite.services.filter((_, i) => i !== index);
+      updateSite(currentSite.id, { services: updatedServices });
+      setCurrentSite(prev => ({ ...prev, services: updatedServices }));
+    }
+  };
+
+  const handleColorSchemeChange = (schemeName) => {
+    const newSettings = {
+      ...designSettings,
+      colorScheme: schemeName
+    };
+    setDesignSettings(newSettings);
+
+    if (currentSite) {
+      updateSite(currentSite.id, { design: newSettings });
+    }
+
+    applyColorScheme(schemeName);
+    window.dispatchEvent(new Event('designSettingsUpdated'));
+  };
+
+  if (!siteData) {
+    return null;
+  }
 
   const steps = [
     {
       title: 'Добро пожаловать! 👋',
       description: 'Ваш сайт создан! Теперь давайте настроим его под себя. Это займет всего несколько минут.',
       icon: Sparkles,
-      gradient: 'from-blue-500 to-cyan-500'
+      gradient: 'from-blue-500 to-cyan-500',
+      type: 'welcome'
     },
     {
       title: 'Редактируйте контент 📝',
       description: 'Используйте меню справа, чтобы изменить текст, добавить услуги и портфолио. Все изменения сохраняются автоматически.',
       icon: Palette,
       gradient: 'from-purple-500 to-pink-500',
-      action: { label: 'Открыть Hero секцию', target: 'hero' }
+      type: 'hero-edit'
+    },
+    {
+      title: 'Добавьте услуги ⚡',
+      description: 'Расскажите о своих услугах. Вы можете добавить несколько услуг прямо здесь.',
+      icon: Zap,
+      gradient: 'from-cyan-500 to-blue-500',
+      type: 'services-edit'
     },
     {
       title: 'Настройте дизайн 🎨',
-      description: 'Выберите цветовую схему и стиль оформления в разделе "Дизайн и цвета". Попробуйте разные варианты!',
+      description: 'Выберите цветовую схему для вашего сайта. Изменения применяются мгновенно!',
       icon: Palette,
       gradient: 'from-orange-500 to-red-500',
-      action: { label: 'Открыть Дизайн', target: 'visual' }
+      type: 'design-edit'
     },
     {
-      title: 'Посмотрите результат 👀',
-      description: 'Нажмите "View Live Site" в меню профиля, чтобы увидеть, как выглядит ваш сайт для посетителей.',
-      icon: Eye,
-      gradient: 'from-green-500 to-emerald-500'
+      title: 'Добавьте контакты 📞',
+      description: 'Укажите контактную информацию, чтобы клиенты могли связаться с вами.',
+      icon: Share2,
+      gradient: 'from-green-500 to-emerald-500',
+      type: 'contacts-edit'
     },
     {
       title: 'Готово! 🚀',
-      description: 'Вы готовы к работе! Не забудьте добавить контакты и настроить SEO для лучшей видимости в поисковиках.',
+      description: 'Вы готовы к работе! Ваш сайт настроен и готов к использованию.',
       icon: CheckCircle2,
-      gradient: 'from-blue-500 to-purple-500'
+      gradient: 'from-blue-500 to-purple-500',
+      type: 'complete'
     }
   ];
 
@@ -126,15 +243,206 @@ export default function WelcomeTour({ onClose, onNavigate }) {
             {currentStepData.description}
           </p>
 
-          {/* Action Button if available */}
-          {currentStepData.action && (
-            <button
-              onClick={() => handleAction(currentStepData.action.target)}
-              className={`w-full mb-6 px-6 py-3 bg-gradient-to-r ${currentStepData.gradient} text-white rounded-lg hover:opacity-90 transition-all font-medium flex items-center justify-center gap-2`}
-            >
-              {currentStepData.action.label}
-              <ArrowRight size={18} />
-            </button>
+          {/* Embedded Forms Based on Step Type */}
+          {currentStepData.type === 'hero-edit' && (
+            <div className="space-y-4 mb-6 bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+              <div>
+                <label className="block text-xs font-medium mb-2 text-gray-400">Название компании</label>
+                <input
+                  type="text"
+                  value={siteData.hero?.companyName || ''}
+                  onChange={(e) => updateHero('companyName', e.target.value)}
+                  placeholder="Введите название вашей компании"
+                  className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-2 text-gray-400">Слоган</label>
+                <input
+                  type="text"
+                  value={siteData.hero?.tagline || ''}
+                  onChange={(e) => updateHero('tagline', e.target.value)}
+                  placeholder="Краткое описание вашей деятельности"
+                  className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-2 text-gray-400">Описание</label>
+                <textarea
+                  value={siteData.hero?.description || ''}
+                  onChange={(e) => updateHero('description', e.target.value)}
+                  placeholder="Подробное описание вашей компании и услуг"
+                  rows={3}
+                  className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 resize-none"
+                />
+              </div>
+            </div>
+          )}
+
+          {currentStepData.type === 'services-edit' && (
+            <div className="space-y-4 mb-6 bg-gray-800/50 border border-gray-700 rounded-lg p-4 max-h-96 overflow-y-auto">
+              {currentSite?.services?.map((service, index) => (
+                <div key={service.id || index} className="bg-gray-900/50 border border-gray-700 rounded-lg p-3 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-medium text-gray-300">Услуга {index + 1}</h4>
+                    <button
+                      onClick={() => removeService(index)}
+                      className="text-red-400 hover:text-red-300 text-xs px-2 py-1 rounded hover:bg-red-500/10"
+                    >
+                      ✕ Удалить
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium mb-1.5 text-gray-400">Название *</label>
+                      <input
+                        type="text"
+                        value={service.title || ''}
+                        onChange={(e) => updateService(index, 'title', e.target.value)}
+                        placeholder="Blockchain Development"
+                        className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium mb-1.5 text-gray-400">Категория</label>
+                      <select
+                        value={service.category || SERVICES_CATEGORIES[0]}
+                        onChange={(e) => updateService(index, 'category', e.target.value)}
+                        className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
+                      >
+                        {SERVICES_CATEGORIES.map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium mb-1.5 text-gray-400">Описание *</label>
+                    <textarea
+                      value={service.description || ''}
+                      onChange={(e) => updateService(index, 'description', e.target.value)}
+                      placeholder="Custom blockchain solutions with smart contracts..."
+                      rows={2}
+                      className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 resize-none"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-1">
+                    <input
+                      type="checkbox"
+                      id={`active-${service.id}`}
+                      checked={service.active !== false}
+                      onChange={(e) => updateService(index, 'active', e.target.checked)}
+                      className="w-4 h-4 rounded border-gray-600 text-cyan-500 focus:ring-cyan-500"
+                    />
+                    <label htmlFor={`active-${service.id}`} className="text-xs text-gray-400">
+                      Активна (отображается на сайте)
+                    </label>
+                  </div>
+                </div>
+              ))}
+
+              {(!currentSite?.services || currentSite.services.length === 0) && (
+                <div className="text-center py-6 text-gray-500 text-sm">
+                  Нет услуг. Добавьте минимум 3 услуги для демонстрации.
+                </div>
+              )}
+
+              <button
+                onClick={addService}
+                className="w-full px-4 py-2.5 bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 rounded-lg hover:bg-cyan-500/30 transition-all text-sm font-medium flex items-center justify-center gap-2"
+              >
+                <span className="text-lg">+</span>
+                Добавить услугу
+              </button>
+            </div>
+          )}
+
+          {currentStepData.type === 'design-edit' && (
+            <div className="space-y-4 mb-6 bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+              <label className="block text-xs font-medium mb-3 text-gray-400">Выберите цветовую схему</label>
+              <div className="grid grid-cols-2 gap-3 max-h-80 overflow-y-auto">
+                {Object.entries(COLOR_SCHEMES).map(([key, scheme]) => (
+                  <button
+                    key={key}
+                    onClick={() => handleColorSchemeChange(key)}
+                    className={`group relative overflow-hidden rounded-lg border-2 transition-all duration-300 ${
+                      designSettings.colorScheme === key
+                        ? 'border-white ring-2 ring-white/20 scale-105'
+                        : 'border-gray-700 hover:border-gray-500 hover:scale-105'
+                    }`}
+                  >
+                    <div
+                      className="absolute inset-0 opacity-80 group-hover:opacity-100 transition-opacity"
+                      style={{ background: scheme.gradient }}
+                    />
+                    <div className="relative p-3 backdrop-blur-sm">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs font-bold text-white drop-shadow-lg">{scheme.name}</p>
+                        {designSettings.colorScheme === key && (
+                          <CheckCircle2 size={16} className="text-white" />
+                        )}
+                      </div>
+                      <div className="flex gap-1">
+                        {[scheme.primary, scheme.secondary, scheme.accent].map((color, i) => (
+                          <span
+                            key={i}
+                            className="w-6 h-6 rounded shadow-md border border-white/20"
+                            style={{ backgroundColor: color }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {currentStepData.type === 'contacts-edit' && (
+            <div className="space-y-4 mb-6 bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+              <div>
+                <label className="block text-xs font-medium mb-2 text-gray-400 flex items-center gap-2">
+                  <Phone size={14} />
+                  Телефон
+                </label>
+                <input
+                  type="tel"
+                  value={siteData.contacts?.phone || ''}
+                  onChange={(e) => updateContacts('phone', e.target.value)}
+                  placeholder="+7 (999) 123-45-67"
+                  className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-2 text-gray-400 flex items-center gap-2">
+                  <Mail size={14} />
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={siteData.contacts?.email || ''}
+                  onChange={(e) => updateContacts('email', e.target.value)}
+                  placeholder="info@company.com"
+                  className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-2 text-gray-400 flex items-center gap-2">
+                  <MapPin size={14} />
+                  Адрес
+                </label>
+                <input
+                  type="text"
+                  value={siteData.contacts?.address || ''}
+                  onChange={(e) => updateContacts('address', e.target.value)}
+                  placeholder="г. Москва, ул. Примерная, д. 1"
+                  className="w-full px-3 py-2 text-sm bg-gray-900/50 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50"
+                />
+              </div>
+            </div>
           )}
 
           {/* Checklist on last step */}

@@ -84,18 +84,9 @@ export default function MySites() {
             )}
 
             {/* Site Header */}
-            <div className="flex items-start gap-3 mb-4">
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                site.id === activeSiteId
-                  ? 'bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/30'
-                  : 'bg-gray-800 border border-gray-700'
-              }`}>
-                <Globe size={18} className={site.id === activeSiteId ? 'text-blue-400' : 'text-gray-500'} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-medium text-base truncate">{site.name}</h3>
-                <p className="text-xs text-gray-500 truncate">{site.url}</p>
-              </div>
+            <div className="mb-4">
+              <h3 className="font-medium text-base truncate mb-1">{site.name}</h3>
+              <p className="text-xs text-gray-500 truncate">{site.url}</p>
             </div>
 
             {/* Site Stats */}

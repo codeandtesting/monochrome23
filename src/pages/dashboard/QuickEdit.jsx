@@ -10,7 +10,6 @@ import AISuggestions from '../../components/dashboard/AISuggestions';
 import { HelpTooltip } from '../../components/Tooltip';
 import GroupedTabs from '../../components/dashboard/GroupedTabs';
 import WelcomeTour from '../../components/dashboard/WelcomeTour';
-import QuickStartChecklist from '../../components/dashboard/QuickStartChecklist';
 
 export default function QuickEdit() {
   const [activeSection, setActiveSection] = useState('hero');
@@ -27,14 +26,20 @@ export default function QuickEdit() {
   const [faviconPreview, setFaviconPreview] = useState(null);
   const [faviconVariations, setFaviconVariations] = useState([]);
 
-  // Check if first login and show welcome tour
+  // Check if first login or new site and show welcome tour
   useEffect(() => {
     const isFirstLogin = localStorage.getItem('progressit_first_login');
-    const tourCompleted = localStorage.getItem('progressit_tour_completed');
+    const site = getActiveSite();
 
-    if (isFirstLogin === 'true' && !tourCompleted) {
+    // Показываем тур если это первый логин ИЛИ если сайт новый
+    if (isFirstLogin === 'true' || site?.isNew) {
       setShowWelcomeTour(true);
       localStorage.removeItem('progressit_first_login');
+
+      // Убираем флаг isNew у сайта после показа тура
+      if (site?.isNew) {
+        updateSite(site.id, { isNew: false });
+      }
     }
   }, []);
 
@@ -89,6 +94,12 @@ export default function QuickEdit() {
     if (site) {
       setCurrentSite(site);
       setSiteData(site.data);
+
+      // Проверяем, если сайт новый - показываем тур
+      if (site.isNew) {
+        setShowWelcomeTour(true);
+        updateSite(site.id, { isNew: false });
+      }
 
       // Загрузить настройки дизайна из сайта
       if (site.design) {
@@ -556,18 +567,23 @@ export default function QuickEdit() {
         <div className="max-w-3xl">
           {/* Header */}
           <div className="mb-5">
-            <h1 className="text-xl font-semibold mb-1">Quick Edit</h1>
-            <p className="text-gray-500 text-xs">
-              Редактируйте контент в реальном времени
-            </p>
-          </div>
-
-          {/* Quick Start Checklist */}
-          <div className="mb-4">
-            <QuickStartChecklist
-              siteData={siteData}
-              onNavigate={(target) => setActiveSection(target)}
-            />
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-xl font-semibold mb-1">Quick Edit</h1>
+                <p className="text-gray-500 text-xs">
+                  Редактируйте контент в реальном времени
+                </p>
+              </div>
+              {/* Debug button for testing tour */}
+              <button
+                onClick={() => setShowWelcomeTour(true)}
+                className="px-3 py-1.5 bg-purple-500/20 border border-purple-500/30 text-purple-300 rounded-lg hover:bg-purple-500/30 transition-all text-xs font-medium flex items-center gap-2"
+                title="Показать Welcome Tour для тестирования"
+              >
+                <Sparkles size={14} />
+                Показать тур
+              </button>
+            </div>
           </div>
 
           {/* Hero Section */}
@@ -1098,11 +1114,6 @@ export default function QuickEdit() {
           {activeSection === 'services' && (
             <div>
               <h2 className="text-sm font-medium text-gray-400 mb-3">Управление услугами</h2>
-              <div className="mb-4 bg-blue-500/5 border border-blue-500/20 rounded-lg p-3">
-                <p className="text-xs text-blue-400">
-                  💡 Теперь вы можете управлять до 1000+ услуг с поиском, фильтрами и пагинацией.
-                </p>
-              </div>
               <ServicesManager />
             </div>
           )}

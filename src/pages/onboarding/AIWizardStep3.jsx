@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, ArrowRight, Phone, Mail, Globe, Facebook, Instagram, Twitter, MessageCircle, Youtube } from 'lucide-react';
+import { Check, ArrowRight, Phone, Mail, Globe, Facebook, Instagram, Twitter, MessageCircle, Youtube, Send } from 'lucide-react';
 import { createSite } from '../../utils/sitesStorage';
 import ChatPage from '../ChatPage';
 import ClientSitePage from '../ClientSitePage';
@@ -9,12 +9,15 @@ import ProgressSteps from '../../components/ProgressSteps';
 export default function AIWizardStep3() {
   const navigate = useNavigate();
   const [generatedContent, setGeneratedContent] = useState(null);
-  const [selectedLayout, setSelectedLayout] = useState('main'); // 'main' (Layout 1) | 'client' (Layout 2)
-  const [selectedColor, setSelectedColor] = useState('purple'); // Color scheme
+  // Fixed to Layout 1 only
+  const selectedLayout = 'main';
+  const selectedColor = 'purple';
   const [contacts, setContacts] = useState({
     phone: '',
     email: '',
-    website: ''
+    website: '',
+    telegram: '',
+    whatsapp: ''
   });
   const [social, setSocial] = useState({
     facebook: '',
@@ -79,7 +82,9 @@ export default function AIWizardStep3() {
         phone: contacts.phone,
         email: contacts.email,
         address: '',
-        website: contacts.website
+        website: contacts.website,
+        telegram: contacts.telegram,
+        whatsapp: contacts.whatsapp
       },
       social: social,
       stats: {
@@ -147,7 +152,9 @@ export default function AIWizardStep3() {
           phone: contacts.phone,
           email: contacts.email,
           address: '',
-          website: contacts.website
+          website: contacts.website,
+          telegram: contacts.telegram,
+          whatsapp: contacts.whatsapp
         },
         social: {
           facebook: social.facebook,
@@ -191,18 +198,8 @@ export default function AIWizardStep3() {
   return (
     <div className="min-h-screen bg-black text-white p-4">
       <div className="max-w-7xl mx-auto py-8">
-        {/* Progress Steps */}
-        <ProgressSteps
-          currentStep={3}
-          totalSteps={4}
-          steps={['Basic Info', 'Services', 'Details', 'Preview']}
-        />
-
-        {/* Header */}
+        {/* Header - No green checkmark */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 bg-green-500 rounded-full mb-4">
-            <Check size={24} className="text-white" />
-          </div>
           <h1 className="text-4xl font-bold mb-2">Your Website is Ready!</h1>
           <p className="text-gray-400">
             Review and add your contact information
@@ -213,73 +210,11 @@ export default function AIWizardStep3() {
         <div className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">Generated Content Preview</h2>
 
-          {/* Layout & Color Selectors in one row */}
-          <div className="flex flex-wrap items-center gap-4 mb-4">
-            <div className="inline-flex bg-gray-900 border border-gray-800 rounded-lg p-1">
-              <button
-                onClick={() => setSelectedLayout('main')}
-                className={`px-4 py-2 rounded-md text-sm font-medium ${selectedLayout === 'main' ? 'bg-blue-500 text-white' : 'text-gray-300 hover:bg-gray-800'}`}
-              >
-                Layout 1
-              </button>
-              <button
-                onClick={() => setSelectedLayout('client')}
-                className={`px-4 py-2 rounded-md text-sm font-medium ${selectedLayout === 'client' ? 'bg-blue-500 text-white' : 'text-gray-300 hover:bg-gray-800'}`}
-              >
-                Layout 2
-              </button>
-            </div>
-
-            {/* Color Scheme Selector - Inline */}
-            <div className="flex items-center gap-3 bg-gray-900 border border-gray-800 rounded-lg p-3">
-              <label className="text-sm font-medium whitespace-nowrap">Color Scheme:</label>
-              <div className="flex gap-2">
-                {[
-                  { name: 'purple', color: '#a855f7', label: 'Purple' },
-                  { name: 'blue', color: '#3b82f6', label: 'Blue' },
-                  { name: 'green', color: '#10b981', label: 'Green' },
-                  { name: 'orange', color: '#f97316', label: 'Orange' },
-                  { name: 'pink', color: '#ec4899', label: 'Pink' },
-                  { name: 'red', color: '#ef4444', label: 'Red' }
-                ].map((scheme) => (
-                  <button
-                    key={scheme.name}
-                    onClick={() => setSelectedColor(scheme.name)}
-                    className={`relative w-8 h-8 rounded-lg border-2 transition-all ${
-                      selectedColor === scheme.name
-                        ? 'border-white scale-110'
-                        : 'border-gray-700 hover:border-gray-500'
-                    }`}
-                    style={{ backgroundColor: scheme.color }}
-                    title={scheme.label}
-                  >
-                    {selectedColor === scheme.name && (
-                      <Check size={14} className="absolute inset-0 m-auto text-white" />
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Preview Window - Full Width */}
+          {/* Preview Window - Full Width - Layout 1 Only */}
           {previewSite && (
-            selectedLayout === 'main' ? (
-              <div className="rounded-lg overflow-hidden border border-gray-800 bg-black h-[700px]">
-                <ChatPage siteData={previewSite} embedded />
-              </div>
-            ) : (
-              <div className="rounded-lg overflow-hidden border border-gray-800 bg-black h-[700px] relative">
-                <div style={{
-                  transform: 'scale(0.5)',
-                  transformOrigin: 'top left',
-                  width: '200%',
-                  height: '200%'
-                }}>
-                  <ClientSitePage siteData={previewSite} />
-                </div>
-              </div>
-            )
+            <div className="rounded-lg overflow-hidden border border-gray-800 bg-black h-[700px]">
+              <ChatPage siteData={previewSite} embedded />
+            </div>
           )}
         </div>
 
@@ -360,15 +295,14 @@ export default function AIWizardStep3() {
 
         {/* Two Column Layout - Content Details & Contact Form */}
         <div className="grid lg:grid-cols-2 gap-6">
-          {/* Left Column - Content Details */}
+          {/* Left Column - Content Details - TEMPORARILY COMMENTED OUT FOR TESTING */}
+          {/*
           <div>
             <h2 className="text-xl font-semibold mb-2">Content Details</h2>
             <p className="text-sm text-gray-400 mb-4">
               More flexible setup of your website waiting for you in your personal dashboard. No worries, we got every aspect covered!
             </p>
-            {/* Compact Content Cards */}
             <div className="space-y-3">
-              {/* Hero Section */}
               <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
                 <h3 className="text-xs font-medium text-gray-400 mb-2 uppercase">Hero Section</h3>
                 <h4 className="text-xl font-bold mb-1">{generatedContent.hero.companyName}</h4>
@@ -376,7 +310,6 @@ export default function AIWizardStep3() {
                 <p className="text-gray-400 text-xs leading-relaxed">{generatedContent.hero.description}</p>
               </div>
 
-              {/* Services */}
               <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
                 <h3 className="text-xs font-medium text-gray-400 mb-2 uppercase">Services ({generatedContent.services.length})</h3>
                 <div className="space-y-2">
@@ -392,7 +325,6 @@ export default function AIWizardStep3() {
                 </div>
               </div>
 
-              {/* Stats - Editable */}
               {stats.length > 0 && (
                 <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
                   <h3 className="text-xs font-medium text-gray-400 mb-2 uppercase">Statistics (Editable)</h3>
@@ -428,154 +360,189 @@ export default function AIWizardStep3() {
               )}
             </div>
           </div>
+          */}
 
-          {/* Right: Contact Form */}
-          <div>
+          {/* Compact Contact Form - Single Column, More Efficient Layout */}
+          <div className="lg:col-span-2">
             <h2 className="text-2xl font-semibold mb-4">Add Your Contact Information</h2>
-            
-            <div className="space-y-6">
-              {/* Contact Details */}
-              <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
-                <h3 className="text-lg font-medium mb-4">Contact Details</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2 flex items-center gap-2">
-                      <Phone size={16} />
-                      Phone Number
-                    </label>
-                    <input
-                      type="tel"
-                      value={contacts.phone}
-                      onChange={(e) => setContacts({ ...contacts, phone: e.target.value })}
-                      placeholder="+1 234 567 890"
-                      className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
 
-                  <div>
-                    <label className="block text-sm font-medium mb-2 flex items-center gap-2">
-                      <Mail size={16} />
-                      Email Address
-                    </label>
-                    <input
-                      type="email"
-                      value={contacts.email}
-                      onChange={(e) => setContacts({ ...contacts, email: e.target.value })}
-                      placeholder="contact@company.com"
-                      className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
+            {/* Single Card with Grid Layout */}
+            <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+              {/* Contact Details - Grid Layout */}
+              <h3 className="text-base font-medium mb-3 text-gray-300">Contact Details</h3>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+                <div>
+                  <label className="block text-xs font-medium mb-1.5 flex items-center gap-1.5 text-gray-400">
+                    <Phone size={14} />
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    value={contacts.phone}
+                    onChange={(e) => setContacts({ ...contacts, phone: e.target.value })}
+                    placeholder="+1 234 567 890"
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                </div>
 
-                  <div>
-                    <label className="block text-sm font-medium mb-2 flex items-center gap-2">
-                      <Globe size={16} />
-                      Website (optional)
-                    </label>
-                    <input
-                      type="url"
-                      value={contacts.website}
-                      onChange={(e) => setContacts({ ...contacts, website: e.target.value })}
-                      placeholder="https://www.yourwebsite.com"
-                      className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5 flex items-center gap-1.5 text-gray-400">
+                    <Mail size={14} />
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    value={contacts.email}
+                    onChange={(e) => setContacts({ ...contacts, email: e.target.value })}
+                    placeholder="contact@company.com"
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium mb-1.5 flex items-center gap-1.5 text-gray-400">
+                    <Globe size={14} />
+                    Website (optional)
+                  </label>
+                  <input
+                    type="url"
+                    value={contacts.website}
+                    onChange={(e) => setContacts({ ...contacts, website: e.target.value })}
+                    placeholder="https://yoursite.com"
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium mb-1.5 flex items-center gap-1.5 text-gray-400">
+                    <Send size={14} />
+                    Telegram (optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={contacts.telegram}
+                    onChange={(e) => setContacts({ ...contacts, telegram: e.target.value })}
+                    placeholder="@username"
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium mb-1.5 flex items-center gap-1.5 text-gray-400">
+                    <Phone size={14} />
+                    WhatsApp (optional)
+                  </label>
+                  <input
+                    type="tel"
+                    value={contacts.whatsapp}
+                    onChange={(e) => setContacts({ ...contacts, whatsapp: e.target.value })}
+                    placeholder="+1 234 567 890"
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
                 </div>
               </div>
 
-              {/* Social Media */}
-              <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
-                <h3 className="text-lg font-medium mb-4">Social Media (optional)</h3>
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-sm font-medium mb-2 flex items-center gap-2">
-                      <Facebook size={16} />
-                      Facebook
-                    </label>
-                    <input
-                      type="url"
-                      value={social.facebook}
-                      onChange={(e) => setSocial({ ...social, facebook: e.target.value })}
-                      placeholder="https://facebook.com/..."
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2 flex items-center gap-2">
-                      <Instagram size={16} />
-                      Instagram
-                    </label>
-                    <input
-                      type="url"
-                      value={social.instagram}
-                      onChange={(e) => setSocial({ ...social, instagram: e.target.value })}
-                      placeholder="https://instagram.com/..."
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2 flex items-center gap-2">
-                      <Twitter size={16} />
-                      X (Twitter)
-                    </label>
-                    <input
-                      type="url"
-                      value={social.twitter}
-                      onChange={(e) => setSocial({ ...social, twitter: e.target.value })}
-                      placeholder="https://twitter.com/..."
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2 flex items-center gap-2">
-                      <MessageCircle size={16} />
-                      Discord
-                    </label>
-                    <input
-                      type="url"
-                      value={social.discord}
-                      onChange={(e) => setSocial({ ...social, discord: e.target.value })}
-                      placeholder="https://discord.gg/..."
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2 flex items-center gap-2">
-                      <Youtube size={16} />
-                      YouTube
-                    </label>
-                    <input
-                      type="url"
-                      value={social.youtube}
-                      onChange={(e) => setSocial({ ...social, youtube: e.target.value })}
-                      placeholder="https://youtube.com/..."
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                    />
-                  </div>
+              {/* Social Media - Compact Grid */}
+              <h3 className="text-base font-medium mb-3 text-gray-300">Social Media (optional)</h3>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-medium mb-1.5 flex items-center gap-1.5 text-gray-400">
+                    <Facebook size={14} />
+                    Facebook
+                  </label>
+                  <input
+                    type="url"
+                    value={social.facebook}
+                    onChange={(e) => setSocial({ ...social, facebook: e.target.value })}
+                    placeholder="facebook.com/..."
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
                 </div>
-              </div>
 
-              {/* Action Buttons */}
-              <div className="flex gap-3">
-                <button
-                  onClick={() => navigate('/onboarding/ai-wizard/step1')}
-                  className="px-6 py-3 border border-gray-700 rounded-lg hover:bg-gray-800 transition-colors"
-                >
-                  Start Over
-                </button>
-                <button
-                  onClick={handleFinish}
-                  className="flex-1 py-3 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg hover:from-green-600 hover:to-blue-600 transition-all flex items-center justify-center gap-2 font-medium"
-                >
-                  Finish & Go to Dashboard
-                  <ArrowRight size={20} />
-                </button>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5 flex items-center gap-1.5 text-gray-400">
+                    <Instagram size={14} />
+                    Instagram
+                  </label>
+                  <input
+                    type="url"
+                    value={social.instagram}
+                    onChange={(e) => setSocial({ ...social, instagram: e.target.value })}
+                    placeholder="instagram.com/..."
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium mb-1.5 flex items-center gap-1.5 text-gray-400">
+                    <Twitter size={14} />
+                    X (Twitter)
+                  </label>
+                  <input
+                    type="url"
+                    value={social.twitter}
+                    onChange={(e) => setSocial({ ...social, twitter: e.target.value })}
+                    placeholder="twitter.com/..."
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium mb-1.5 flex items-center gap-1.5 text-gray-400">
+                    <MessageCircle size={14} />
+                    Discord
+                  </label>
+                  <input
+                    type="url"
+                    value={social.discord}
+                    onChange={(e) => setSocial({ ...social, discord: e.target.value })}
+                    placeholder="discord.gg/..."
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium mb-1.5 flex items-center gap-1.5 text-gray-400">
+                    <Youtube size={14} />
+                    YouTube
+                  </label>
+                  <input
+                    type="url"
+                    value={social.youtube}
+                    onChange={(e) => setSocial({ ...social, youtube: e.target.value })}
+                    placeholder="youtube.com/..."
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                </div>
               </div>
             </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => navigate('/onboarding/ai-wizard/step1')}
+                className="px-6 py-3 border border-gray-700 rounded-lg hover:bg-gray-800 transition-colors text-sm"
+              >
+                Start Over
+              </button>
+              <button
+                onClick={handleFinish}
+                className="flex-1 py-3 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg hover:from-green-600 hover:to-blue-600 transition-all flex items-center justify-center gap-2 font-medium text-sm"
+              >
+                Finish & Go to Dashboard
+                <ArrowRight size={20} />
+              </button>
+            </div>
           </div>
+        </div>
+
+        {/* Progress Steps - Moved to Bottom */}
+        <div className="mt-12">
+          <ProgressSteps
+            currentStep={3}
+            totalSteps={4}
+            steps={['Basic Info', 'Services', 'Details', 'Preview']}
+          />
         </div>
       </div>
     </div>
