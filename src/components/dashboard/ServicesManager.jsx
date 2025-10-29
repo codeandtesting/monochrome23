@@ -155,7 +155,7 @@ export default function ServicesManager() {
   return (
     <div className="space-y-3">
       {/* Header Stats */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-3">
           <p className="text-xs text-gray-500">Всего услуг</p>
           <p className="text-xl font-semibold">{services.length}</p>
@@ -340,7 +340,8 @@ export default function ServicesManager() {
 
       {/* Services Table */}
       <div className="bg-gray-900/50 border border-gray-800 rounded-lg overflow-hidden">
-        <table className="w-full">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[800px]">
           <thead className="bg-gray-800/30 border-b border-gray-800">
             <tr>
               <th className="p-2.5 text-left">
@@ -472,6 +473,7 @@ export default function ServicesManager() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Pagination */}

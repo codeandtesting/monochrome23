@@ -176,6 +176,15 @@ export default function GroupedTabs({ activeSection, onTabChange }) {
         );
       })}
 
+      {/* Tour Button */}
+      <button
+        onClick={() => window.dispatchEvent(new CustomEvent('showWelcomeTour'))}
+        className="w-full mt-2 p-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg group"
+      >
+        <Sparkles size={16} className="text-white group-hover:rotate-12 transition-transform" />
+        <span className="text-sm font-medium text-white">Показать тур</span>
+      </button>
+
       {/* Tips */}
       <div className="mt-3 p-3 bg-gradient-to-br from-blue-500/5 to-purple-500/5 border border-blue-500/20 rounded-lg">
         <div className="flex items-start gap-2">

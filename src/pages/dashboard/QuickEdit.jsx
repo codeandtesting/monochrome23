@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, ExternalLink, RefreshCw, Sparkles, Palette, Monitor, Eye, X, Zap, BarChart, Upload, Chrome } from 'lucide-react';
+import { Save, ExternalLink, RefreshCw, Sparkles, Palette, Monitor, Eye, X, Zap, BarChart, Upload, Chrome, Menu } from 'lucide-react';
 import { getActiveSite, updateSite } from '../../utils/sitesStorage';
 import { getDesignSettings, saveDesignSettings, COLOR_SCHEMES, LANDING_TYPES, applyColorScheme } from '../../utils/designStorage';
 import { getSEOData, saveSEOData, generateSEOFromSite, calculateSEOScore } from '../../utils/seoStorage';
@@ -25,6 +25,7 @@ export default function QuickEdit() {
   const [seoScore, setSeoScore] = useState(null);
   const [faviconPreview, setFaviconPreview] = useState(null);
   const [faviconVariations, setFaviconVariations] = useState([]);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   // Check if first login or new site and show welcome tour
   useEffect(() => {
@@ -46,17 +47,23 @@ export default function QuickEdit() {
   // Загрузить данные при монтировании
   useEffect(() => {
     loadSiteData();
-    
+
     const handleActiveSiteChange = () => {
       loadSiteData();
     };
-    
+
+    const handleShowTour = () => {
+      setShowWelcomeTour(true);
+    };
+
     window.addEventListener('activeSiteChanged', handleActiveSiteChange);
     window.addEventListener('sitesUpdated', handleActiveSiteChange);
-    
+    window.addEventListener('showWelcomeTour', handleShowTour);
+
     return () => {
       window.removeEventListener('activeSiteChanged', handleActiveSiteChange);
       window.removeEventListener('sitesUpdated', handleActiveSiteChange);
+      window.removeEventListener('showWelcomeTour', handleShowTour);
     };
   }, []);
 
@@ -561,9 +568,9 @@ export default function QuickEdit() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-100px)] -m-6 md:-m-8">
+    <div className="flex flex-col lg:flex-row h-[calc(100vh-100px)] -m-6 md:-m-8">
       {/* Left Panel - Edit Forms */}
-      <div className="flex-1 p-6 overflow-y-auto bg-black">
+      <div className="flex-1 p-4 md:p-6 overflow-y-auto bg-black">
         <div className="max-w-3xl">
           {/* Header */}
           <div className="mb-5">
@@ -574,14 +581,13 @@ export default function QuickEdit() {
                   Редактируйте контент в реальном времени
                 </p>
               </div>
-              {/* Debug button for testing tour */}
+
+              {/* Mobile Menu Button */}
               <button
-                onClick={() => setShowWelcomeTour(true)}
-                className="px-3 py-1.5 bg-purple-500/20 border border-purple-500/30 text-purple-300 rounded-lg hover:bg-purple-500/30 transition-all text-xs font-medium flex items-center gap-2"
-                title="Показать Welcome Tour для тестирования"
+                onClick={() => setShowMobileMenu(true)}
+                className="lg:hidden p-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all shadow-lg"
               >
-                <Sparkles size={14} />
-                Показать тур
+                <Menu size={20} />
               </button>
             </div>
           </div>
@@ -1800,8 +1806,8 @@ export default function QuickEdit() {
         </div>
       </div>
 
-      {/* Right Sidebar - Grouped Sections */}
-      <div className="w-72 bg-gray-900 border-l border-gray-800 p-4 overflow-y-auto">
+      {/* Right Sidebar - Grouped Sections (Desktop) */}
+      <div className="hidden lg:block lg:w-72 bg-gray-900 border-l border-gray-800 p-4 overflow-y-auto">
         <div className="mb-4">
           <h3 className="font-medium text-sm mb-0.5">Settings</h3>
           <p className="text-xs text-gray-600">Select section</p>
@@ -1812,6 +1818,45 @@ export default function QuickEdit() {
           onTabChange={setActiveSection}
         />
       </div>
+
+      {/* Mobile Menu Drawer */}
+      {showMobileMenu && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 animate-fadeIn"
+            onClick={() => setShowMobileMenu(false)}
+          />
+
+          {/* Drawer */}
+          <div className="lg:hidden fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-gray-900 border-l border-gray-800 z-50 overflow-y-auto animate-slideInRight shadow-2xl">
+            {/* Header */}
+            <div className="sticky top-0 bg-gray-900 border-b border-gray-800 p-4 flex items-center justify-between">
+              <div>
+                <h3 className="font-medium text-sm">Settings</h3>
+                <p className="text-xs text-gray-600">Select section</p>
+              </div>
+              <button
+                onClick={() => setShowMobileMenu(false)}
+                className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Menu Content */}
+            <div className="p-4">
+              <GroupedTabs
+                activeSection={activeSection}
+                onTabChange={(section) => {
+                  setActiveSection(section);
+                  setShowMobileMenu(false);
+                }}
+              />
+            </div>
+          </div>
+        </>
+      )}
 
       {/* AI Suggestions Modal */}
       {showAI && (

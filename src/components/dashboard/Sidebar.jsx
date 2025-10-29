@@ -14,7 +14,12 @@ import {
   Globe,
   Sparkles,
   ChevronUp,
-  User
+  User,
+  Languages,
+  HelpCircle,
+  BookOpen,
+  Crown,
+  ChevronRight
 } from 'lucide-react';
 import { getActiveSite } from '../../utils/sitesStorage';
 
@@ -23,6 +28,8 @@ export default function Sidebar({ isOpen, setIsOpen }) {
   const navigate = useNavigate();
   const [activeSite, setActiveSite] = useState(null);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState('English (United States)');
   const profileMenuRef = useRef(null);
 
   useEffect(() => {
@@ -96,19 +103,52 @@ export default function Sidebar({ isOpen, setIsOpen }) {
     },
   ];
 
+  const languages = [
+    'English (United States)',
+    'Français (France)',
+    'Deutsch (Deutschland)',
+    'हिन्दी (भारत)',
+    'Indonesia (Indonesia)',
+    'Italiano (Italia)',
+    '日本語 (日本)',
+    '한국어(대한민국)',
+    'Português (Brasil)',
+    'Español (Latinoamérica)',
+    'Español (España)',
+    'Русский (Россия)'
+  ];
+
   const profileMenuItems = [
     {
       path: '/dashboard/settings',
       icon: Settings,
       label: 'Settings',
-      gradient: 'from-gray-500 to-slate-500'
+      shortcut: '⌘+Ctrl+,'
     },
     {
-      path: '/dashboard/subscription',
-      icon: CreditCard,
-      label: 'Subscription',
-      gradient: 'from-pink-500 to-rose-500',
-      badge: 'Pro'
+      type: 'language',
+      icon: Languages,
+      label: 'Language',
+      hasSubmenu: true
+    },
+    {
+      type: 'button',
+      icon: HelpCircle,
+      label: 'Get help',
+      action: () => window.open('https://docs.monochrome.app/help', '_blank')
+    },
+    {
+      type: 'button',
+      icon: BookOpen,
+      label: 'Learn more',
+      action: () => window.open('https://docs.monochrome.app', '_blank')
+    },
+    {
+      type: 'link',
+      path: '/dashboard/settings',
+      state: { tab: 'billing' },
+      icon: Crown,
+      label: 'Upgrade plan'
     },
   ];
 
@@ -128,34 +168,33 @@ export default function Sidebar({ isOpen, setIsOpen }) {
 
   return (
     <>
-      {/* Mobile Menu Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg shadow-lg hover:scale-110 transition-transform"
-      >
-        {isOpen ? <X size={24} /> : <Menu size={24} />}
-      </button>
-
-      {/* Overlay for mobile */}
-      {isOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30 backdrop-blur-sm animate-fadeIn"
-          onClick={() => setIsOpen(false)}
-        />
+      {/* Mobile Menu Button - Hidden when menu is open */}
+      {!isOpen && (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="lg:hidden fixed bottom-4 right-4 z-50 p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full shadow-lg hover:scale-110 transition-transform"
+        >
+          <Menu size={24} />
+        </button>
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar - Desktop: Vertical, Mobile: Horizontal */}
       <aside
         className={`
-          fixed lg:static inset-y-0 left-0 z-40
-          w-64 bg-gradient-to-b from-gray-900 via-gray-900 to-black border-r border-gray-800
+          fixed lg:static z-40
+          lg:inset-y-0 lg:left-0 lg:w-64
+          lg:bg-gradient-to-b from-gray-900 via-gray-900 to-black lg:border-r border-gray-800
+
+          bottom-0 left-0 right-0
+          bg-gray-900/95 backdrop-blur-lg border-t
+
           transform transition-transform duration-300 ease-in-out
-          ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          ${isOpen ? 'translate-y-0' : 'translate-y-full lg:translate-y-0 lg:translate-x-0'}
         `}
       >
-        <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className="p-6 border-b border-gray-800/50">
+        <div className="flex lg:flex-col h-full relative">
+          {/* Logo - Desktop Only */}
+          <div className="hidden lg:block p-6 border-b border-gray-800/50">
             <Link to="/" className="flex items-center space-x-3 group">
               <div className="w-9 h-9 bg-gradient-to-br from-blue-500/80 to-purple-600/80 rounded-lg flex items-center justify-center transition-all">
                 <span className="text-white font-semibold text-base">
@@ -169,32 +208,40 @@ export default function Sidebar({ isOpen, setIsOpen }) {
             </Link>
           </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-0.5 overflow-y-auto">
+          {/* Close button for mobile */}
+          <button
+            onClick={() => setIsOpen(false)}
+            className="lg:hidden absolute top-2 right-2 p-2 hover:bg-gray-800 rounded-lg transition-colors"
+          >
+            <X size={20} />
+          </button>
+
+          {/* Navigation - Horizontal on Mobile, Vertical on Desktop */}
+          <nav className="flex lg:flex-col flex-1 lg:p-4 p-1.5 lg:space-y-0.5 gap-1.5 overflow-x-auto lg:overflow-x-visible lg:overflow-y-auto whitespace-nowrap lg:whitespace-normal">
             {menuItems.map((item, index) => {
               const active = isActive(item.path);
               return (
                 <Link
                   key={item.path}
                   to={item.path}
-                  onClick={() => setIsOpen(false)}
                   className={`
-                    group relative flex items-center justify-between px-3 py-2.5 rounded-lg
+                    group relative flex lg:flex-row flex-col items-center lg:justify-between justify-center
+                    px-2 py-1.5 lg:px-3 lg:py-2.5 rounded-lg min-w-[70px] lg:min-w-0
                     transition-all duration-200
                     ${
                       active
-                        ? `bg-gradient-to-r ${item.gradient} bg-opacity-10 border-l-2 border-l-blue-500`
+                        ? `bg-gradient-to-r ${item.gradient} bg-opacity-10 lg:border-l-2 lg:border-l-blue-500 border-b-2 lg:border-b-0 border-b-blue-500`
                         : 'text-gray-400 hover:bg-gray-800/30 hover:text-white'
                     }
                   `}
                 >
-                  <div className="flex items-center space-x-3">
-                    <item.icon size={18} className={active ? 'text-white' : ''} />
-                    <span className={`text-sm ${active ? 'font-medium text-white' : 'font-normal'}`}>{item.label}</span>
+                  <div className="flex lg:flex-row flex-col items-center lg:space-x-3 gap-0.5">
+                    <item.icon size={16} className={active ? 'text-white' : ''} />
+                    <span className={`text-[10px] lg:text-sm ${active ? 'font-medium text-white' : 'font-normal'}`}>{item.label}</span>
                   </div>
 
                   {item.badge && (
-                    <span className="px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 text-xs font-medium rounded">
+                    <span className="hidden lg:inline-block px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 text-xs font-medium rounded">
                       {item.badge}
                     </span>
                   )}
@@ -203,51 +250,123 @@ export default function Sidebar({ isOpen, setIsOpen }) {
             })}
           </nav>
 
-          {/* Bottom Section - User Profile Menu */}
-          <div className="p-4 border-t border-gray-800/50 relative" ref={profileMenuRef}>
+          {/* Bottom Section - User Profile Menu (Desktop Only) */}
+          <div className="hidden lg:block p-4 border-t border-gray-800/50 relative" ref={profileMenuRef}>
             {/* Profile Menu Dropdown */}
             {profileMenuOpen && (
               <div className="absolute bottom-full left-4 right-4 mb-2 bg-gray-900 border border-gray-800 rounded-lg shadow-2xl overflow-hidden animate-fadeInUp">
                 <div className="py-1">
-                  {profileMenuItems.map((item) => (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      onClick={() => {
-                        setProfileMenuOpen(false);
-                        setIsOpen(false);
-                      }}
-                      className={`
-                        group flex items-center justify-between px-4 py-2.5
-                        hover:bg-gray-800/50 transition-colors
-                        ${isActive(item.path) ? 'bg-gray-800/30' : ''}
-                      `}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <item.icon size={16} className="text-gray-400 group-hover:text-white transition-colors" />
-                        <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
-                          {item.label}
-                        </span>
-                      </div>
-                      {item.badge && (
-                        <span className="px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 text-xs font-medium rounded">
-                          {item.badge}
-                        </span>
-                      )}
-                    </Link>
-                  ))}
+                  {profileMenuItems.map((item, index) => {
+                    // Language menu item with submenu
+                    if (item.type === 'language') {
+                      return (
+                        <div key={index} className="relative">
+                          <button
+                            onClick={() => setLanguageMenuOpen(!languageMenuOpen)}
+                            className="w-full group flex items-center justify-between px-4 py-2.5 hover:bg-gray-800/50 transition-colors text-left"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <item.icon size={16} className="text-gray-400 group-hover:text-white transition-colors" />
+                              <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
+                                {item.label}
+                              </span>
+                            </div>
+                            <ChevronRight size={14} className="text-gray-500" />
+                          </button>
+
+                          {/* Language Submenu */}
+                          {languageMenuOpen && (
+                            <div className="absolute left-full top-0 ml-1 w-56 bg-gray-900 border border-gray-800 rounded-lg shadow-2xl max-h-80 overflow-y-auto">
+                              <div className="py-1">
+                                {languages.map((lang) => (
+                                  <button
+                                    key={lang}
+                                    onClick={() => {
+                                      setSelectedLanguage(lang);
+                                      setLanguageMenuOpen(false);
+                                      setProfileMenuOpen(false);
+                                    }}
+                                    className="w-full group flex items-center justify-between px-4 py-2.5 hover:bg-gray-800/50 transition-colors text-left"
+                                  >
+                                    <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
+                                      {lang}
+                                    </span>
+                                    {selectedLanguage === lang && (
+                                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                                    )}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+
+                    // Button type (with custom action)
+                    if (item.type === 'button') {
+                      return (
+                        <button
+                          key={index}
+                          onClick={() => {
+                            item.action();
+                            setProfileMenuOpen(false);
+                          }}
+                          className="w-full group flex items-center justify-between px-4 py-2.5 hover:bg-gray-800/50 transition-colors text-left"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <item.icon size={16} className="text-gray-400 group-hover:text-white transition-colors" />
+                            <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
+                              {item.label}
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    }
+
+                    // Regular link item
+                    return (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        state={item.state || undefined}
+                        onClick={() => {
+                          setProfileMenuOpen(false);
+                          setIsOpen(false);
+                        }}
+                        className={`
+                          group flex items-center justify-between px-4 py-2.5
+                          hover:bg-gray-800/50 transition-colors
+                          ${isActive(item.path) ? 'bg-gray-800/30' : ''}
+                        `}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <item.icon size={16} className="text-gray-400 group-hover:text-white transition-colors" />
+                          <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
+                            {item.label}
+                          </span>
+                        </div>
+                        {item.shortcut && (
+                          <span className="text-xs text-gray-500">
+                            {item.shortcut}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
 
                   {/* Divider */}
                   <div className="my-1 border-t border-gray-800"></div>
 
                   {/* Logout */}
                   <button
+                    type="button"
                     onClick={handleLogout}
                     className="w-full group flex items-center space-x-3 px-4 py-2.5 hover:bg-red-500/10 transition-colors text-left"
                   >
                     <LogOut size={16} className="text-gray-400 group-hover:text-red-400 transition-colors" />
                     <span className="text-sm text-gray-300 group-hover:text-red-400 transition-colors">
-                      Logout
+                      Log out
                     </span>
                   </button>
                 </div>
@@ -256,6 +375,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
 
             {/* Profile Button */}
             <button
+              type="button"
               onClick={() => setProfileMenuOpen(!profileMenuOpen)}
               className={`
                 group w-full flex items-center justify-between px-3 py-2.5 rounded-lg
@@ -268,13 +388,16 @@ export default function Sidebar({ isOpen, setIsOpen }) {
               `}
             >
               <div className="flex items-center space-x-3">
-                {/* User Avatar with "U" */}
+                {/* User Avatar with initials */}
                 <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-semibold text-sm">U</span>
+                  <span className="text-white font-semibold text-sm">FF</span>
                 </div>
-                <div className="text-left">
-                  <div className="text-sm font-medium text-white">Artjom</div>
-                  <div className="text-xs text-gray-500">Pro plan</div>
+                <div className="text-left overflow-hidden">
+                  <div className="text-sm font-medium text-white truncate">faazylav@gmail.com</div>
+                  <div className="text-xs text-gray-500 flex items-center gap-1.5">
+                    <Crown size={10} className="text-yellow-500" />
+                    Max plan
+                  </div>
                 </div>
               </div>
               <ChevronUp

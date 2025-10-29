@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ExternalLink, Edit, Lightbulb, Pencil, Plus, ChevronDown, Check, Globe } from 'lucide-react';
+import { ExternalLink, Edit, Lightbulb, Plus, ChevronDown, Check, Globe } from 'lucide-react';
 import { getChatsBySite, getChatPreview, getTimeAgo } from '../../utils/chatStorage';
 import { getActiveSite, getAllSites, setActiveSite, getActiveSiteId } from '../../utils/sitesStorage';
 import OnboardingChecklist from '../../components/OnboardingChecklist';
@@ -86,7 +86,7 @@ export default function DashboardHome() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-start sm:justify-between gap-4">
         <div className="relative" ref={selectorRef}>
           <div className="flex items-center gap-3 mb-2">
             <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
@@ -116,7 +116,7 @@ export default function DashboardHome() {
 
           {/* Sites Dropdown */}
           {showSiteSelector && totalSites > 1 && (
-            <div className="absolute top-full left-0 mt-2 w-80 bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-lg shadow-2xl z-50 overflow-hidden backdrop-blur-sm animate-fadeIn">
+            <div className="absolute top-full left-0 mt-2 w-full sm:w-80 max-w-[calc(100vw-2rem)] bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-lg shadow-2xl z-50 overflow-hidden backdrop-blur-sm animate-fadeIn">
               <div className="max-h-64 overflow-y-auto">
                 {allSites.map((site, index) => (
                   <div
@@ -155,10 +155,10 @@ export default function DashboardHome() {
             </div>
           )}
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           <Link
             to="/onboarding/ai-wizard/step1"
-            className="group px-5 py-2.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all flex items-center gap-2 hover:scale-105 shadow-lg hover:shadow-green-500/50"
+            className="group px-5 py-2.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all flex items-center justify-center gap-2 hover:scale-105 shadow-lg hover:shadow-green-500/50"
           >
             <Plus size={18} className="group-hover:rotate-90 transition-transform" />
             New Site
@@ -166,17 +166,10 @@ export default function DashboardHome() {
           <Link
             to={activeSite?.url || '/'}
             target="_blank"
-            className="group px-5 py-2.5 border-2 border-blue-500/30 text-blue-400 rounded-lg hover:bg-blue-500/10 hover:border-blue-500/50 transition-all flex items-center gap-2 hover:scale-105"
+            className="group px-5 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all flex items-center justify-center gap-2 hover:scale-105 shadow-lg hover:shadow-purple-500/50"
           >
             <ExternalLink size={18} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             View Site
-          </Link>
-          <Link
-            to="/dashboard/quick-edit"
-            className="group px-5 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all flex items-center gap-2 hover:scale-105 shadow-lg hover:shadow-purple-500/50"
-          >
-            <Pencil size={18} className="group-hover:-rotate-12 transition-transform" />
-            Edit Site
           </Link>
         </div>
       </div>

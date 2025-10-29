@@ -52,7 +52,7 @@ export default function WelcomeTour({ onClose, onNavigate }) {
       setChatMessages([
         {
           role: 'assistant',
-          content: `Привет! Я AI-чатбот для ${companyName}. Задайте мне вопрос об услугах, и я отвечу! 👋`
+          content: `Привет! Я AI-ассистент компании ${companyName}. Расскажу об услугах и отвечу на вопросы! 👋`
         }
       ]);
     }
@@ -247,14 +247,14 @@ export default function WelcomeTour({ onClose, onNavigate }) {
     },
     {
       title: 'Поговорите с AI-чатботом 🤖',
-      description: 'Попробуйте пообщаться с вашим AI-ассистентом! Он будет отвечать на вопросы посетителей 24/7.',
+      description: 'Протестируйте вашего AI-ассистента! Он будет представлять вашу компанию и отвечать на вопросы клиентов 24/7.',
       icon: MessageCircle,
       gradient: 'from-blue-500 to-purple-500',
       type: 'chat-demo'
     },
     {
       title: 'Готово! 🚀',
-      description: 'Вы готовы к работе! Ваш сайт настроен и готов к использованию.',
+      description: 'Базовая настройка завершена! Теперь вы можете посмотреть сайт или продолжить его кастомизацию.',
       icon: CheckCircle2,
       gradient: 'from-blue-500 to-purple-500',
       type: 'complete'
@@ -275,8 +275,11 @@ export default function WelcomeTour({ onClose, onNavigate }) {
       setCurrentStep(currentStep + 1);
       setCompletedSteps([...completedSteps, currentStep]);
     } else {
-      // Last step - close tour
+      // Last step - navigate to portfolio for deeper customization
       localStorage.setItem('progressit_tour_completed', 'true');
+      if (onNavigate) {
+        onNavigate('portfolio');
+      }
       onClose();
     }
   };
@@ -742,7 +745,7 @@ export default function WelcomeTour({ onClose, onNavigate }) {
               onClick={handleNext}
               className={`flex-1 px-6 py-2.5 bg-gradient-to-r ${currentStepData.gradient} text-white rounded-lg hover:opacity-90 transition-all font-medium flex items-center justify-center gap-2`}
             >
-              {currentStep === steps.length - 1 ? 'Начать работу' : 'Далее'}
+              {currentStep === steps.length - 1 ? 'Продолжить настройку' : 'Далее'}
               <ArrowRight size={18} />
             </button>
             {currentStep === 0 && (

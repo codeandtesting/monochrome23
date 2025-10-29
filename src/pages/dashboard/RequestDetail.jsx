@@ -68,7 +68,7 @@ export default function RequestDetail() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-start sm:justify-between gap-4">
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate('/dashboard/requests')}
@@ -91,24 +91,24 @@ export default function RequestDetail() {
         </div>
 
         {/* Actions */}
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <button
             onClick={handleCopyChat}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-700 rounded-lg hover:bg-gray-800 transition-colors"
+            className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-700 rounded-lg hover:bg-gray-800 transition-colors flex-1 sm:flex-initial"
           >
             {copied ? <CheckCircle size={18} /> : <Copy size={18} />}
             {copied ? 'Скопировано' : 'Копировать'}
           </button>
           <button
             onClick={handleExportJSON}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-700 rounded-lg hover:bg-gray-800 transition-colors"
+            className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-700 rounded-lg hover:bg-gray-800 transition-colors flex-1 sm:flex-initial"
           >
             <Download size={18} />
             JSON
           </button>
           <button
             onClick={handleDelete}
-            className="flex items-center gap-2 px-4 py-2 bg-red-500 bg-opacity-20 text-red-400 border border-red-500 border-opacity-30 rounded-lg hover:bg-opacity-30 transition-colors"
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-red-500 bg-opacity-20 text-red-400 border border-red-500 border-opacity-30 rounded-lg hover:bg-opacity-30 transition-colors w-full sm:w-auto"
           >
             <Trash2 size={18} />
             Удалить
@@ -117,7 +117,7 @@ export default function RequestDetail() {
       </div>
 
       {/* Chat Info */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
           <p className="text-sm text-gray-400 mb-1">Статус</p>
           <p className={`font-medium ${

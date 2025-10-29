@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, Zap, Clock, MessageCircle, Globe, TrendingUp, CheckCircle, Play, Star, Users, Rocket, Moon, Coffee, Target, BarChart3, Shield } from 'lucide-react';
+import '../styles/animated-card.css';
+import '../styles/glassmorphism.css';
+import '../styles/monochrome-theme.css';
+import { initializeGlassCards, addScrollReveal } from '../utils/glassEffects';
+import MonochromeColorControls from '../components/MonochromeColorControls';
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -60,8 +65,8 @@ export default function LandingPage() {
     },
     {
       icon: <Shield className="w-8 h-8" />,
-      title: "Completely Free",
-      description: "No card required, no hidden fees, no limits on number of sites. Start right now.",
+      title: "Start Free Forever",
+      description: "Launch unlimited sites, no credit card required. Upgrade anytime for premium features.",
       gradient: "from-teal-500 to-green-500"
     }
   ];
@@ -85,6 +90,19 @@ export default function LandingPage() {
     };
   }, []);
 
+  // Initialize glass morphism effects
+  useEffect(() => {
+    const cleanup1 = initializeGlassCards('.glass-feature-card', 8);
+    const cleanup2 = addScrollReveal('.glass-card');
+    const cleanup3 = addScrollReveal('.glass-feature-card');
+
+    return () => {
+      cleanup1();
+      cleanup2();
+      cleanup3();
+    };
+  }, []);
+
   const stats = [
     { icon: <Rocket />, value: sitesCount.toLocaleString() + '+', label: "Sites Created", gradient: "from-blue-500 to-cyan-500", live: true },
     { icon: <Users />, value: usersCount.toLocaleString() + '+', label: "Active Users", gradient: "from-purple-500 to-pink-500", live: true },
@@ -92,16 +110,62 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white overflow-hidden">
-      {/* Animated Background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-0 left-1/2 w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
-      </div>
+    <div className="min-h-screen text-white overflow-x-hidden relative">
+      {/* Monochrome Animated Background */}
+      <div className="monochrome-animated-bg"></div>
+
+      {/* SVG Filters */}
+      <svg className="animated-svg-container">
+        <defs>
+          {/* Turbulent displacement filter for animated card */}
+          <filter id="turbulent-displace" colorInterpolationFilters="sRGB" x="-20%" y="-20%" width="140%" height="140%">
+            <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise1" seed="1" />
+            <feOffset in="noise1" dx="0" dy="0" result="offsetNoise1">
+              <animate attributeName="dy" values="700; 0" dur="6s" repeatCount="indefinite" calcMode="linear" />
+            </feOffset>
+
+            <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise2" seed="1" />
+            <feOffset in="noise2" dx="0" dy="0" result="offsetNoise2">
+              <animate attributeName="dy" values="0; -700" dur="6s" repeatCount="indefinite" calcMode="linear" />
+            </feOffset>
+
+            <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise1" seed="2" />
+            <feOffset in="noise1" dx="0" dy="0" result="offsetNoise3">
+              <animate attributeName="dx" values="490; 0" dur="6s" repeatCount="indefinite" calcMode="linear" />
+            </feOffset>
+
+            <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise2" seed="2" />
+            <feOffset in="noise2" dx="0" dy="0" result="offsetNoise4">
+              <animate attributeName="dx" values="0; -490" dur="6s" repeatCount="indefinite" calcMode="linear" />
+            </feOffset>
+
+            <feComposite in="offsetNoise1" in2="offsetNoise2" result="part1" />
+            <feComposite in="offsetNoise3" in2="offsetNoise4" result="part2" />
+            <feBlend in="part1" in2="part2" mode="color-dodge" result="combinedNoise" />
+
+            <feDisplacementMap in="SourceGraphic" in2="combinedNoise" scale="30" xChannelSelector="R" yChannelSelector="B" />
+          </filter>
+
+          {/* Colorize filter */}
+          <filter id="colorize" x="0%" y="0%" width="100%" height="100%">
+            <feFlood floodColor="var(--base-color)" floodOpacity="0.5" />
+            <feComposite in="SourceGraphic" operator="overlay" />
+          </filter>
+
+          {/* Monochrome blend filter */}
+          <filter id="monochrome-blend" x="0%" y="0%" width="100%" height="100%">
+            <feColorMatrix type="saturate" values="0" />
+            <feComponentTransfer>
+              <feFuncR type="discrete" tableValues="0.2 0.4 0.6 0.8 1" />
+              <feFuncG type="discrete" tableValues="0.2 0.4 0.6 0.8 1" />
+              <feFuncB type="discrete" tableValues="0.2 0.4 0.6 0.8 1" />
+            </feComponentTransfer>
+          </filter>
+        </defs>
+      </svg>
 
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-black bg-opacity-90 backdrop-blur-sm border-b border-gray-800">
+      <nav className="fixed top-0 left-0 right-0 z-50 glass-nav">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
@@ -129,30 +193,30 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto text-center relative z-10">
           {/* Trust Badges */}
           <div className="flex justify-center gap-6 mb-8 flex-wrap">
-            <div className="flex items-center gap-2 px-4 py-2 bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-full">
-              <Sparkles size={16} className="text-blue-400" />
-              <span className="text-sm font-medium text-gray-300">AI-Powered</span>
+            <div className="glass-badge" style={{ borderColor: 'var(--base-alpha-20)' }}>
+              <Sparkles size={16} style={{ color: 'var(--base-color)' }} />
+              <span className="text-sm font-medium" style={{ color: 'var(--tint-light)' }}>AI-Powered</span>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-full">
-              <Zap size={16} className="text-yellow-400" />
-              <span className="text-sm font-medium text-gray-300">No-Code</span>
+            <div className="glass-badge" style={{ borderColor: 'var(--base-alpha-20)' }}>
+              <Zap size={16} style={{ color: 'var(--base-color)' }} />
+              <span className="text-sm font-medium" style={{ color: 'var(--tint-light)' }}>No-Code</span>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-full">
-              <CheckCircle size={16} className="text-green-400" />
-              <span className="text-sm font-medium text-gray-300">100% Free</span>
+            <div className="glass-badge" style={{ borderColor: 'var(--base-alpha-20)' }}>
+              <CheckCircle size={16} style={{ color: 'var(--base-color)' }} />
+              <span className="text-sm font-medium" style={{ color: 'var(--tint-light)' }}>Free to Start</span>
             </div>
           </div>
 
           {/* Animated Title */}
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 min-h-[180px] sm:min-h-[200px] lg:min-h-[220px]">
-            <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent animate-gradient bg-300%">
+            <span className="monochrome-text-gradient">
               {typedText}
               {isTyping && <span className="animate-pulse">|</span>}
             </span>
           </h1>
 
-          <p className="text-xl sm:text-2xl text-gray-300 mb-4 max-w-3xl mx-auto animate-fadeInUp leading-relaxed">
-            <span className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent block mb-3">
+          <p className="text-xl sm:text-2xl mb-4 max-w-3xl mx-auto animate-fadeInUp leading-relaxed" style={{ color: 'var(--tint-light)' }}>
+            <span className="text-2xl sm:text-3xl font-bold block mb-3" style={{ color: 'var(--base-color)' }}>
               While You Sleep — Your Site Works
             </span>
             AI chatbot talks to clients, answers questions<br />
@@ -162,14 +226,22 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8 animate-fadeInUp animation-delay-300">
             <button
               onClick={() => navigate('/onboarding')}
-              className="group px-10 py-5 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 rounded-xl text-xl font-bold transition-all transform hover:scale-105 hover:shadow-2xl hover:shadow-green-500/50 flex items-center gap-3"
+              className="monochrome-button px-10 py-5 rounded-xl text-xl font-bold flex items-center gap-3"
+              style={{ background: `linear-gradient(135deg, var(--base-color), var(--tint-light))` }}
             >
-              <Sparkles size={24} className="group-hover:rotate-12 transition-transform" />
-              Create Site Free
+              <span className="relative z-10 flex items-center gap-3">
+                <Sparkles size={24} />
+                Start Free Now
+              </span>
             </button>
             <button
               onClick={() => navigate('/2')}
-              className="group px-10 py-5 border-2 border-gray-600 hover:border-blue-500 hover:bg-blue-500/10 rounded-xl text-xl font-bold transition-all flex items-center gap-3"
+              className="group px-10 py-5 rounded-xl text-xl font-bold transition-all flex items-center gap-3"
+              style={{
+                border: `2px solid var(--base-alpha-30)`,
+                background: 'var(--base-alpha-10)',
+                backdropFilter: 'blur(10px)'
+              }}
             >
               <Play size={24} className="group-hover:translate-x-1 transition-transform" />
               Watch Demo
@@ -178,16 +250,11 @@ export default function LandingPage() {
 
           {/* Urgency message */}
           <div className="mb-12 animate-fadeInUp animation-delay-400">
-            <p className="text-gray-400 text-lg">
-              <span className="text-green-400 font-semibold">Get your first lead</span> today
+            <p className="text-lg" style={{ color: 'var(--tone-light)' }}>
+              <span style={{ color: 'var(--base-color)', fontWeight: '600' }}>Get your first lead</span> today
             </p>
           </div>
 
-          {/* Free Badge */}
-          <div className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/50 rounded-full backdrop-blur-sm animate-fadeInUp animation-delay-600 hover:scale-105 transition-transform">
-            <CheckCircle size={20} className="text-yellow-400 animate-pulse" />
-            <span className="text-yellow-100 font-semibold">100% FREE • No Credit Card • Unlimited</span>
-          </div>
         </div>
 
         {/* Floating Elements */}
@@ -200,27 +267,27 @@ export default function LandingPage() {
       <section className="py-16 px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
-            <span className="text-red-400">Tired</span> of These Problems?
+            <span className="monochrome-text-gradient">Tired</span> of These Problems?
           </h2>
-          <p className="text-center text-gray-400 mb-12 text-lg">We know what's stopping you</p>
+          <p className="text-center mb-12 text-lg" style={{ color: 'var(--tone-light)' }}>We know what's stopping you</p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="p-6 bg-red-500/5 border border-red-500/20 rounded-xl">
+            <div className="monochrome-premium-card monochrome-card-gradient p-6">
               <div className="text-4xl mb-3">⏰</div>
-              <h3 className="text-xl font-bold mb-2 text-red-400">Slow & Expensive</h3>
-              <p className="text-gray-400">Developers charge $1000+ and take months. Every edit costs extra.</p>
+              <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--base-color)' }}>Slow & Expensive</h3>
+              <p style={{ color: 'var(--tone-light)' }}>Developers charge $1000+ and take months. Every edit costs extra.</p>
             </div>
 
-            <div className="p-6 bg-red-500/5 border border-red-500/20 rounded-xl">
+            <div className="monochrome-premium-card monochrome-card-stripes p-6">
               <div className="text-4xl mb-3">😴</div>
-              <h3 className="text-xl font-bold mb-2 text-red-400">Site Doesn't Sell</h3>
-              <p className="text-gray-400">Visitors come and go. No chat, no one to answer questions at 3 AM.</p>
+              <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--base-color)' }}>Site Doesn't Sell</h3>
+              <p style={{ color: 'var(--tone-light)' }}>Visitors come and go. No chat, no one to answer questions at 3 AM.</p>
             </div>
 
-            <div className="p-6 bg-red-500/5 border border-red-500/20 rounded-xl">
+            <div className="monochrome-premium-card monochrome-card-dots p-6">
               <div className="text-4xl mb-3">🤯</div>
-              <h3 className="text-xl font-bold mb-2 text-red-400">Complex Management</h3>
-              <p className="text-gray-400">WordPress, hosting, domains, updates. Need a tech expert for every little thing.</p>
+              <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--base-color)' }}>Complex Management</h3>
+              <p style={{ color: 'var(--tone-light)' }}>WordPress, hosting, domains, updates. Need a tech expert for every little thing.</p>
             </div>
           </div>
         </div>
@@ -230,28 +297,39 @@ export default function LandingPage() {
       <section className="py-12 px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {stats.map((stat, index) => (
-              <div
-                key={index}
-                className="text-center p-6 bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl hover:border-gray-700 hover:scale-105 transition-all group"
-              >
-                <div className={`w-16 h-16 bg-gradient-to-br ${stat.gradient} rounded-full flex items-center justify-center mx-auto mb-4 group-hover:rotate-12 transition-transform`}>
-                  <div className="text-white">
-                    {stat.icon}
+            {stats.map((stat, index) => {
+              const patterns = ['monochrome-card-circles', 'monochrome-card-mesh', 'monochrome-card-waves'];
+              return (
+                <div
+                  key={index}
+                  className={`monochrome-premium-card ${patterns[index % patterns.length]} text-center p-6`}
+                >
+                  <div
+                    className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:rotate-12 transition-transform"
+                    style={{
+                      background: 'linear-gradient(135deg, var(--base-color), var(--tint-light))'
+                    }}
+                  >
+                    <div className="text-white">
+                      {stat.icon}
+                    </div>
                   </div>
+                  <div
+                    className="text-4xl font-bold mb-2 flex items-center justify-center gap-2"
+                    style={{ color: 'var(--tint-lightest)' }}
+                  >
+                    {stat.value}
+                    {stat.live && (
+                      <span className="relative flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: 'var(--base-color)' }}></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3" style={{ background: 'var(--base-color)' }}></span>
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ color: 'var(--tone-light)' }}>{stat.label}</div>
                 </div>
-                <div className={`text-4xl font-bold mb-2 bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent flex items-center justify-center gap-2`}>
-                  {stat.value}
-                  {stat.live && (
-                    <span className="relative flex h-3 w-3">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                    </span>
-                  )}
-                </div>
-                <div className="text-gray-400">{stat.label}</div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -260,60 +338,86 @@ export default function LandingPage() {
       <section className="py-20 px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl sm:text-5xl font-bold text-center mb-4">
-            Why Choose <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Monochrome?</span>
+            Why Choose <span className="monochrome-text-gradient">Monochrome?</span>
           </h2>
-          <p className="text-center text-gray-400 mb-16 text-lg">Everything you need to launch a selling website</p>
+          <p className="text-center mb-16 text-lg" style={{ color: 'var(--tone-light)' }}>Everything you need to launch a selling website</p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 perspective-container">
             {features.map((feature, index) => (
               <div
                 key={index}
-                className="p-6 bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl hover:border-gray-700 transition-all group hover:scale-105 hover:shadow-2xl"
+                className="glass-feature-card"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                <div className={`w-16 h-16 bg-gradient-to-br ${feature.gradient} bg-opacity-20 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all`}>
-                  <div className={`bg-gradient-to-br ${feature.gradient} bg-clip-text text-transparent`}>
-                    {feature.icon}
+                <div className="glass-glow"></div>
+                <div className="glass-content">
+                  <div
+                    className="w-16 h-16 rounded-lg flex items-center justify-center mb-4 transition-all"
+                    style={{
+                      background: 'linear-gradient(135deg, var(--base-alpha-20), var(--base-alpha-30))'
+                    }}
+                  >
+                    <div style={{ color: 'var(--base-color)' }}>
+                      {feature.icon}
+                    </div>
                   </div>
+                  <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--tint-lightest)' }}>{feature.title}</h3>
+                  <p style={{ color: 'var(--tone-light)' }}>{feature.description}</p>
                 </div>
-                <h3 className="text-xl font-bold mb-2 group-hover:text-blue-400 transition-colors">{feature.title}</h3>
-                <p className="text-gray-400">{feature.description}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* CTA Section with Animated Card */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-2xl p-12 backdrop-blur-sm hover:scale-105 transition-transform">
-            <div className="flex items-center justify-center gap-3 mb-6">
-              <Moon className="w-12 h-12 text-blue-400" />
-              <Coffee className="w-12 h-12 text-orange-400" />
+        <div className="max-w-4xl mx-auto">
+          <div className="animated-card-container">
+            <div className="animated-card-inner">
+              <div className="animated-card-border-outer">
+                <div className="animated-card-main"></div>
+              </div>
+              <div className="animated-card-glow-1"></div>
+              <div className="animated-card-glow-2"></div>
             </div>
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6">
-              While You Sleep,<br />
-              <span className="bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
-                Your Site Sells For You
-              </span>
-            </h2>
-            <p className="text-xl text-gray-300 mb-8 leading-relaxed">
-              AI chatbot talks to every visitor, answers questions,<br />
-              tells about your services and collects leads automatically.<br />
-              <span className="text-green-400 font-semibold">24/7. No days off. No salary.</span>
-            </p>
-            <button
-              onClick={() => navigate('/onboarding')}
-              className="group px-12 py-6 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 rounded-xl text-2xl font-bold transition-all transform hover:scale-110 hover:shadow-2xl hover:shadow-green-500/50 flex items-center gap-3 mx-auto"
-            >
-              <Sparkles size={28} className="group-hover:rotate-180 transition-transform duration-500" />
-              Launch in 60 Seconds
-              <Sparkles size={28} className="group-hover:rotate-180 transition-transform duration-500" />
-            </button>
-            <p className="text-gray-400 mt-6 text-lg">
-              Get your <span className="text-green-400 font-semibold">first lead today</span>
-            </p>
+
+            <div className="animated-card-overlay-1"></div>
+            <div className="animated-card-overlay-2"></div>
+            <div className="animated-card-bg-glow"></div>
+
+            <div className="animated-card-content">
+              <div className="flex items-center justify-center gap-3 mb-6">
+                <Moon className="w-12 h-12" style={{ color: 'var(--base-color)' }} />
+                <Coffee className="w-12 h-12" style={{ color: 'var(--tint-light)' }} />
+              </div>
+              <h2 className="text-4xl sm:text-5xl font-bold mb-6">
+                While You Sleep,<br />
+                <span className="monochrome-text-gradient">
+                  Your Site Sells For You
+                </span>
+              </h2>
+              <p className="text-xl mb-8 leading-relaxed" style={{ color: 'var(--tone-light)' }}>
+                AI chatbot talks to every visitor, answers questions,<br />
+                tells about your services and collects leads automatically.<br />
+                <span className="font-semibold" style={{ color: 'var(--base-color)' }}>24/7. No days off. No salary.</span>
+              </p>
+              <button
+                onClick={() => navigate('/onboarding')}
+                className="monochrome-button group px-12 py-6 rounded-xl text-2xl font-bold transition-all transform hover:scale-110 flex items-center gap-3 mx-auto"
+                style={{
+                  background: 'linear-gradient(135deg, var(--base-color), var(--tint-light))',
+                  boxShadow: '0 0 40px var(--base-alpha-50)'
+                }}
+              >
+                <Sparkles size={28} className="group-hover:rotate-180 transition-transform duration-500" />
+                <span className="relative z-10">Launch in 60 Seconds</span>
+                <Sparkles size={28} className="group-hover:rotate-180 transition-transform duration-500" />
+              </button>
+              <p className="mt-6 text-lg" style={{ color: 'var(--tone-light)' }}>
+                Get your <span className="font-semibold" style={{ color: 'var(--base-color)' }}>first lead today</span>
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -322,106 +426,184 @@ export default function LandingPage() {
       <section className="py-20 px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-4xl sm:text-5xl font-bold text-center mb-4">
-            Frequently Asked Questions
+            <span className="monochrome-text-gradient">Frequently Asked Questions</span>
           </h2>
-          <p className="text-center text-gray-400 mb-12 text-lg">Everything you need to know</p>
+          <p className="text-center mb-12 text-lg" style={{ color: 'var(--tone-light)' }}>Everything you need to know</p>
 
           <div className="space-y-4">
-            <div className="p-6 bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl hover:border-gray-700 transition-all">
+            <div className="monochrome-premium-card monochrome-card-gradient p-6">
               <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
-                <span className="text-blue-400">❓</span>
-                Really in 60 seconds?
+                <span style={{ color: 'var(--base-color)' }}>❓</span>
+                <span style={{ color: 'var(--tint-lightest)' }}>Really in 60 seconds?</span>
               </h3>
-              <p className="text-gray-400">Yes! Answer 3 questions — AI creates the site automatically. Text, design, chatbot — everything ready to work.</p>
+              <p style={{ color: 'var(--tone-light)' }}>Yes! Answer 3 questions — AI creates the site automatically. Text, design, chatbot — everything ready to work.</p>
             </div>
 
-            <div className="p-6 bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl hover:border-gray-700 transition-all">
+            <div className="monochrome-premium-card monochrome-card-stripes p-6">
               <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
-                <span className="text-green-400">💰</span>
-                How much does it cost?
+                <span style={{ color: 'var(--base-color)' }}>💰</span>
+                <span style={{ color: 'var(--tint-lightest)' }}>How much does it cost?</span>
               </h3>
-              <p className="text-gray-400">Completely free. No hidden fees, no trial period. Create unlimited websites.</p>
+              <p style={{ color: 'var(--tone-light)' }}>Start free with unlimited sites. Premium plans available with advanced features, analytics, and priority support.</p>
             </div>
 
-            <div className="p-6 bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl hover:border-gray-700 transition-all">
+            <div className="monochrome-premium-card monochrome-card-dots p-6">
               <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
-                <span className="text-purple-400">🤖</span>
-                How does the AI chatbot work?
+                <span style={{ color: 'var(--base-color)' }}>🤖</span>
+                <span style={{ color: 'var(--tint-lightest)' }}>How does the AI chatbot work?</span>
               </h3>
-              <p className="text-gray-400">The chatbot learns your services and answers visitor questions 24/7. It collects contacts, talks about prices and services — like an experienced manager.</p>
+              <p style={{ color: 'var(--tone-light)' }}>The chatbot learns your services and answers visitor questions 24/7. It collects contacts, talks about prices and services — like an experienced manager.</p>
             </div>
 
-            <div className="p-6 bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl hover:border-gray-700 transition-all">
+            <div className="monochrome-premium-card monochrome-card-circles p-6">
               <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
-                <span className="text-orange-400">⚙️</span>
-                Do I need technical knowledge?
+                <span style={{ color: 'var(--base-color)' }}>⚙️</span>
+                <span style={{ color: 'var(--tint-lightest)' }}>Do I need technical knowledge?</span>
               </h3>
-              <p className="text-gray-400">No! The interface is intuitive and easy. Change text, add services, customize colors — like a regular editor.</p>
+              <p style={{ color: 'var(--tone-light)' }}>No! The interface is intuitive and easy. Change text, add services, customize colors — like a regular editor.</p>
             </div>
 
-            <div className="p-6 bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl hover:border-gray-700 transition-all">
+            <div className="monochrome-premium-card monochrome-card-mesh p-6">
               <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
-                <span className="text-pink-400">📱</span>
-                Does it work on phones?
+                <span style={{ color: 'var(--base-color)' }}>📱</span>
+                <span style={{ color: 'var(--tint-lightest)' }}>Does it work on phones?</span>
               </h3>
-              <p className="text-gray-400">Yes! All sites are responsive — look beautiful on any device: smartphones, tablets, desktops.</p>
+              <p style={{ color: 'var(--tone-light)' }}>Yes! All sites are responsive — look beautiful on any device: smartphones, tablets, desktops.</p>
             </div>
 
-            <div className="p-6 bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl hover:border-gray-700 transition-all">
+            <div className="monochrome-premium-card monochrome-card-waves p-6">
               <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
-                <span className="text-yellow-400">🔒</span>
-                Is my data safe?
+                <span style={{ color: 'var(--base-color)' }}>🔒</span>
+                <span style={{ color: 'var(--tint-lightest)' }}>Is my data safe?</span>
               </h3>
-              <p className="text-gray-400">Absolutely! All data is stored locally in your browser. We don't collect personal information or share it with third parties.</p>
+              <p style={{ color: 'var(--tone-light)' }}>Absolutely! All data is stored locally in your browser. We don't collect personal information or share it with third parties.</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-gray-800 py-12 px-4 sm:px-6 lg:px-8 relative z-10">
+      <footer className="border-t py-12 px-4 sm:px-6 lg:px-8 relative z-10" style={{ borderColor: 'var(--base-alpha-20)' }}>
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             {/* Logo & Description */}
             <div className="md:col-span-2">
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <span className="text-xl font-bold">M</span>
+                <div
+                  className="w-10 h-10 rounded-lg flex items-center justify-center"
+                  style={{
+                    background: 'linear-gradient(135deg, var(--base-color), var(--tint-light))'
+                  }}
+                >
+                  <span className="text-xl font-bold text-white">M</span>
                 </div>
-                <span className="text-xl font-bold">Monochrome</span>
+                <span className="text-xl font-bold" style={{ color: 'var(--tint-lightest)' }}>Monochrome</span>
               </div>
-              <p className="text-gray-400 max-w-md">
+              <p className="max-w-md" style={{ color: 'var(--tone-light)' }}>
                 Your Vision, Infinite Possibilities. AI-powered website builder for modern businesses.
               </p>
             </div>
 
             {/* Product */}
             <div>
-              <h4 className="font-semibold mb-4">Product</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><button onClick={() => navigate('/onboarding')} className="hover:text-white transition-colors">Create Site</button></li>
-                <li><button onClick={() => navigate('/2')} className="hover:text-white transition-colors">Demo</button></li>
-                <li><button onClick={() => navigate('/dashboard')} className="hover:text-white transition-colors">Dashboard</button></li>
+              <h4 className="font-semibold mb-4" style={{ color: 'var(--tint-lightest)' }}>Product</h4>
+              <ul className="space-y-2" style={{ color: 'var(--tone-light)' }}>
+                <li>
+                  <button
+                    onClick={() => navigate('/onboarding')}
+                    className="transition-colors"
+                    style={{ color: 'var(--tone-light)' }}
+                    onMouseEnter={(e) => e.target.style.color = 'var(--base-color)'}
+                    onMouseLeave={(e) => e.target.style.color = 'var(--tone-light)'}
+                  >
+                    Create Site
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => navigate('/2')}
+                    className="transition-colors"
+                    style={{ color: 'var(--tone-light)' }}
+                    onMouseEnter={(e) => e.target.style.color = 'var(--base-color)'}
+                    onMouseLeave={(e) => e.target.style.color = 'var(--tone-light)'}
+                  >
+                    Demo
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => navigate('/dashboard')}
+                    className="transition-colors"
+                    style={{ color: 'var(--tone-light)' }}
+                    onMouseEnter={(e) => e.target.style.color = 'var(--base-color)'}
+                    onMouseLeave={(e) => e.target.style.color = 'var(--tone-light)'}
+                  >
+                    Dashboard
+                  </button>
+                </li>
               </ul>
             </div>
 
             {/* Company */}
             <div>
-              <h4 className="font-semibold mb-4">Company</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">About</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Privacy</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Terms</a></li>
+              <h4 className="font-semibold mb-4" style={{ color: 'var(--tint-lightest)' }}>Company</h4>
+              <ul className="space-y-2" style={{ color: 'var(--tone-light)' }}>
+                <li>
+                  <a
+                    href="#"
+                    className="transition-colors"
+                    style={{ color: 'var(--tone-light)' }}
+                    onMouseEnter={(e) => e.target.style.color = 'var(--base-color)'}
+                    onMouseLeave={(e) => e.target.style.color = 'var(--tone-light)'}
+                  >
+                    About
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    className="transition-colors"
+                    style={{ color: 'var(--tone-light)' }}
+                    onMouseEnter={(e) => e.target.style.color = 'var(--base-color)'}
+                    onMouseLeave={(e) => e.target.style.color = 'var(--tone-light)'}
+                  >
+                    Contact
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    className="transition-colors"
+                    style={{ color: 'var(--tone-light)' }}
+                    onMouseEnter={(e) => e.target.style.color = 'var(--base-color)'}
+                    onMouseLeave={(e) => e.target.style.color = 'var(--tone-light)'}
+                  >
+                    Privacy
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    className="transition-colors"
+                    style={{ color: 'var(--tone-light)' }}
+                    onMouseEnter={(e) => e.target.style.color = 'var(--base-color)'}
+                    onMouseLeave={(e) => e.target.style.color = 'var(--tone-light)'}
+                  >
+                    Terms
+                  </a>
+                </li>
               </ul>
             </div>
           </div>
 
-          <div className="pt-8 border-t border-gray-800 text-center text-gray-400">
+          <div className="pt-8 text-center" style={{ borderTop: '1px solid var(--base-alpha-20)', color: 'var(--tone-light)' }}>
             <p>&copy; 2025 Monochrome. All rights reserved.</p>
           </div>
         </div>
       </footer>
+
+      {/* Interactive Color Controls */}
+      <MonochromeColorControls />
     </div>
   );
 }
