@@ -3,9 +3,9 @@ import { Palette, X } from 'lucide-react';
 
 export default function MonochromeColorControls() {
   const [isOpen, setIsOpen] = useState(false);
-  const [hue, setHue] = useState(272);
-  const [saturation, setSaturation] = useState(92);
-  const [lightness, setLightness] = useState(69);
+  const [hue, setHue] = useState(200);
+  const [saturation, setSaturation] = useState(85);
+  const [lightness, setLightness] = useState(60);
 
   // Update CSS custom properties
   const updateColors = (newHue, newSaturation, newLightness) => {

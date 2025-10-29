@@ -80,7 +80,10 @@ export default function DashboardHome() {
   const handleSelectSite = (siteId) => {
     setActiveSite(siteId);
     setShowSiteSelector(false);
-    window.location.reload();
+    // Перезагружаем данные вместо reload всей страницы
+    setTimeout(() => {
+      loadData();
+    }, 100);
   };
 
   return (

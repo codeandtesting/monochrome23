@@ -180,7 +180,7 @@ export const LANDING_TYPES = {
 
 // Дефолтные настройки дизайна
 const getDefaultDesignSettings = () => ({
-  colorScheme: 'default',
+  colorScheme: 'cyan',
   activeLanding: 'main', // 'main' или 'client'
   customColors: null, // Для будущих кастомных цветов
   lastModified: new Date().toISOString()

@@ -165,24 +165,25 @@ export default function LandingPage() {
       </svg>
 
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 glass-nav">
+      <nav className="fixed top-0 left-0 right-0 z-50 glass-nav border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-20">
             {/* Logo */}
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center transform hover:rotate-12 transition-transform">
-                <span className="text-xl font-bold">M</span>
+            <div className="flex items-center gap-3 group cursor-pointer">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 via-pink-500 to-blue-500 rounded-xl flex items-center justify-center transform group-hover:rotate-12 transition-all duration-300 shadow-lg group-hover:shadow-purple-500/50">
+                <span className="text-2xl font-bold">M</span>
               </div>
-              <span className="text-xl font-bold">Monochrome</span>
+              <span className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">Monochrome</span>
             </div>
 
             {/* Dashboard Button */}
             <button
               onClick={() => navigate('/dashboard')}
-              className="px-6 py-2.5 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 rounded-lg font-semibold transition-all transform hover:scale-105 hover:shadow-lg hover:shadow-blue-500/50 flex items-center gap-2"
+              className="group px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-xl font-semibold transition-all transform hover:scale-105 hover:shadow-xl hover:shadow-green-500/50 flex items-center gap-2 relative overflow-hidden"
             >
-              <Sparkles size={18} />
-              Dashboard
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+              <Sparkles size={20} className="relative z-10 group-hover:rotate-180 transition-transform duration-500" />
+              <span className="relative z-10">Dashboard</span>
             </button>
           </div>
         </div>
@@ -387,34 +388,34 @@ export default function LandingPage() {
             <div className="animated-card-bg-glow"></div>
 
             <div className="animated-card-content">
-              <div className="flex items-center justify-center gap-3 mb-6">
-                <Moon className="w-12 h-12" style={{ color: 'var(--base-color)' }} />
-                <Coffee className="w-12 h-12" style={{ color: 'var(--tint-light)' }} />
+              <div className="flex items-center justify-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                <Moon className="w-8 h-8 sm:w-12 sm:h-12" style={{ color: 'var(--base-color)' }} />
+                <Coffee className="w-8 h-8 sm:w-12 sm:h-12" style={{ color: 'var(--tint-light)' }} />
               </div>
-              <h2 className="text-4xl sm:text-5xl font-bold mb-6">
+              <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
                 While You Sleep,<br />
                 <span className="monochrome-text-gradient">
                   Your Site Sells For You
                 </span>
               </h2>
-              <p className="text-xl mb-8 leading-relaxed" style={{ color: 'var(--tone-light)' }}>
-                AI chatbot talks to every visitor, answers questions,<br />
-                tells about your services and collects leads automatically.<br />
+              <p className="text-sm sm:text-xl mb-6 sm:mb-8 leading-relaxed" style={{ color: 'var(--tone-light)' }}>
+                AI chatbot talks to every visitor, answers questions,<br className="hidden sm:block" />
+                tells about your services and collects leads automatically.<br className="hidden sm:block" />
                 <span className="font-semibold" style={{ color: 'var(--base-color)' }}>24/7. No days off. No salary.</span>
               </p>
               <button
                 onClick={() => navigate('/onboarding')}
-                className="monochrome-button group px-12 py-6 rounded-xl text-2xl font-bold transition-all transform hover:scale-110 flex items-center gap-3 mx-auto"
+                className="monochrome-button group px-6 py-3 sm:px-12 sm:py-6 rounded-xl text-base sm:text-2xl font-bold transition-all transform hover:scale-110 flex items-center gap-2 sm:gap-3 mx-auto"
                 style={{
                   background: 'linear-gradient(135deg, var(--base-color), var(--tint-light))',
                   boxShadow: '0 0 40px var(--base-alpha-50)'
                 }}
               >
-                <Sparkles size={28} className="group-hover:rotate-180 transition-transform duration-500" />
+                <Sparkles size={20} className="sm:w-7 sm:h-7 group-hover:rotate-180 transition-transform duration-500" />
                 <span className="relative z-10">Launch in 60 Seconds</span>
-                <Sparkles size={28} className="group-hover:rotate-180 transition-transform duration-500" />
+                <Sparkles size={20} className="sm:w-7 sm:h-7 group-hover:rotate-180 transition-transform duration-500" />
               </button>
-              <p className="mt-6 text-lg" style={{ color: 'var(--tone-light)' }}>
+              <p className="mt-4 sm:mt-6 text-sm sm:text-lg" style={{ color: 'var(--tone-light)' }}>
                 Get your <span className="font-semibold" style={{ color: 'var(--base-color)' }}>first lead today</span>
               </p>
             </div>
